@@ -337,13 +337,26 @@ end: "2024-01-20T11:00:00Z"
     };
   }
 
+  private parseBoolean(value: any): boolean | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true';
+    }
+    return Boolean(value);
+  }
+
   private async queryLogs(args: any) {
     const params: LogQueryParams = {
       query: args.query,
       start: args.start,
       end: args.end,
       limit: args.limit,
-      verbose: args.verbose,
+      verbose: this.parseBoolean(args.verbose),
       include_attributes: args.include_attributes,
       exclude_attributes: args.exclude_attributes,
       level: args.level,

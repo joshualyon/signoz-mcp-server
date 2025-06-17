@@ -9,11 +9,18 @@
     "dev": "bun run src/server.ts",
     "build": "bun build src/server.ts --compile --outfile signoz-mcp-server",
     "inspector": "npx @modelcontextprotocol/inspector bun run src/server.ts",
-    "test": "bun run test-server.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:unit": "vitest run test/*.test.ts",
+    "test:integration": "vitest run test/*.integration.test.ts",
+    "test:mcp": "bun run test-server.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^24.0.3"
+    "@types/node": "^24.0.3",
+    "@vitest/ui": "^3.2.4",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

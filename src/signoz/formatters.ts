@@ -26,6 +26,9 @@ export class ResponseFormatter {
    * Format log entries for display
    */
   static formatLogEntries(logs: any[], options: FormattingOptions = {}): string {
+    // Debug logging to see what options are actually passed
+    console.error(`[DEBUG] formatLogEntries called with options:`, JSON.stringify(options, null, 2));
+    
     let formattedText = `Found ${logs.length} log entries\n\n`;
     
     if (logs.length === 0) {
@@ -34,8 +37,10 @@ export class ResponseFormatter {
 
     logs.forEach((entry: any) => {
       if (options.verbose) {
+        console.error(`[DEBUG] Using VERBOSE format`);
         formattedText += this.formatVerboseLog(entry);
       } else {
+        console.error(`[DEBUG] Using COMPACT format`);
         formattedText += this.formatCompactLog(entry, options);
       }
       formattedText += '\n';
