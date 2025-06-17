@@ -4,31 +4,11 @@ import { LogEntry, FormattingOptions } from './types.js';
 import { TimeUtils } from './time-utils.js';
 
 export class ResponseFormatter {
-  // Default attributes to exclude when not in verbose mode
-  private static readonly DEFAULT_EXCLUDED_ATTRIBUTES = [
-    'log.file.path',
-    'log.iostream', 
-    'logtag',
-    'k8s.node.uid',
-    'k8s.pod.uid',
-    'k8s.container.restart_count',
-    'k8s.pod.start_time',
-    'k8s.cluster.name',
-    'k8s.node.name',
-    'signoz.component',
-    'host.name',
-    'os.type',
-    'deployment.environment',
-    'time' // Duplicate of timestamp
-  ];
 
   /**
    * Format log entries for display
    */
   static formatLogEntries(logs: any[], options: FormattingOptions = {}): string {
-    // Debug logging to see what options are actually passed
-    console.error(`[DEBUG] formatLogEntries called with options:`, JSON.stringify(options, null, 2));
-    
     let formattedText = `Found ${logs.length} log entries\n\n`;
     
     if (logs.length === 0) {
@@ -37,10 +17,8 @@ export class ResponseFormatter {
 
     logs.forEach((entry: any) => {
       if (options.verbose) {
-        console.error(`[DEBUG] Using VERBOSE format`);
         formattedText += this.formatVerboseLog(entry);
       } else {
-        console.error(`[DEBUG] Using COMPACT format`);
         formattedText += this.formatCompactLog(entry, options);
       }
       formattedText += '\n';
@@ -99,34 +77,30 @@ export class ResponseFormatter {
   }
 
   /**
-   * Format compact log entry (default mode)
+   * Format compact log entry (default mode) - minimal output
    */
   private static formatCompactLog(entry: any, options: FormattingOptions): string {
     const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
-    const service = entry.data?.resources_string?.['service.name'] || 
-                   entry.data?.resources_string?.['k8s.deployment.name'] || 
-                   'unknown';
+    const serviceContext = this.buildServiceContext(entry.data);
     
-    let formattedText = `[${timestamp}] [${level}] [${service}]\n`;
+    let formattedText = `[${timestamp}] [${level}] [${serviceContext}]\n`;
     formattedText += `${body}\n`;
     
-    // Add filtered attributes if present
-    const attributes = entry.data?.attributes_string || {};
-    const resources = entry.data?.resources_string || {};
-    const allAttributes = { ...attributes, ...resources };
-    
-    const filteredKeys = Object.keys(allAttributes)
-      .filter(k => this.shouldIncludeAttribute(k, options));
-    
-    if (filteredKeys.length > 0) {
-      formattedText += `Attributes: `;
-      filteredKeys.forEach(key => {
-        const value = allAttributes[key];
-        formattedText += `${key}=${value} `;
-      });
-      formattedText += '\n';
+    // In compact mode, only show attributes if explicitly requested
+    if (options.include_attributes && options.include_attributes.length > 0) {
+      const attributes = entry.data?.attributes_string || {};
+      const resources = entry.data?.resources_string || {};
+      const allAttributes = { ...attributes, ...resources };
+      
+      const includedAttrs = options.include_attributes
+        .filter(key => allAttributes[key] !== undefined)
+        .map(key => `${key}=${allAttributes[key]}`);
+      
+      if (includedAttrs.length > 0) {
+        formattedText += `Attributes: ${includedAttrs.join(' ')}\n`;
+      }
     }
     
     return formattedText;
@@ -139,18 +113,16 @@ export class ResponseFormatter {
     const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
-    const service = entry.data?.resources_string?.['service.name'] || 
-                   entry.data?.resources_string?.['k8s.deployment.name'] || 
-                   'unknown';
+    const serviceContext = this.buildServiceContext(entry.data);
     
-    let formattedText = `[${timestamp}] [${level}] [${service}]\n`;
+    let formattedText = `[${timestamp}] [${level}] [${serviceContext}]\n`;
     formattedText += `${body}\n`;
     
     // Add all attributes
     const attributes = entry.data?.attributes_string || {};
     const resources = entry.data?.resources_string || {};
     const relevantKeys = Object.keys({...attributes, ...resources})
-      .filter(k => !['body', 'level', 'severity_text', 'service.name'].includes(k));
+      .filter(k => !['body', 'level', 'severity_text', 'service.name', 'k8s.deployment.name', 'k8s.namespace.name'].includes(k));
     
     if (relevantKeys.length > 0) {
       formattedText += `Attributes: `;
@@ -165,25 +137,36 @@ export class ResponseFormatter {
   }
 
   /**
-   * Determine if an attribute should be included in output
+   * Build intelligent service context from available data
    */
-  private static shouldIncludeAttribute(key: string, options: FormattingOptions): boolean {
-    // Skip basic fields that are already shown
-    if (['body', 'level', 'severity_text', 'service.name', 'k8s.deployment.name'].includes(key)) {
-      return false;
+  private static buildServiceContext(data: any): string {
+    const resources = data?.resources_string || {};
+    
+    // Try service.name first (explicit service identification)
+    if (resources['service.name']) {
+      return resources['service.name'];
     }
-
-    // If explicit include list provided, only include those
-    if (options.include_attributes && options.include_attributes.length > 0) {
-      return options.include_attributes.includes(key);
+    
+    // Build k8s context: namespace/deployment or namespace/pod
+    const namespace = resources['k8s.namespace.name'];
+    const deployment = resources['k8s.deployment.name'];
+    const pod = resources['k8s.pod.name'];
+    const container = resources['k8s.container.name'];
+    
+    if (namespace && deployment) {
+      return `${namespace}/${deployment}`;
+    } else if (namespace && pod) {
+      return `${namespace}/${pod}`;
+    } else if (namespace && container) {
+      return `${namespace}/${container}`;
+    } else if (deployment) {
+      return deployment;
+    } else if (pod) {
+      return pod;
+    } else if (container) {
+      return container;
     }
-
-    // If explicit exclude list provided, exclude those
-    if (options.exclude_attributes && options.exclude_attributes.length > 0) {
-      return !options.exclude_attributes.includes(key);
-    }
-
-    // Default: exclude noisy attributes
-    return !this.DEFAULT_EXCLUDED_ATTRIBUTES.includes(key);
+    
+    return 'unknown';
   }
 }

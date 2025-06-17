@@ -36,15 +36,12 @@ describe('ResponseFormatter', () => {
       expect(result).toContain('[2024-01-15T10:30:00.000Z] [error] [test-service]');
       expect(result).toContain('Test log message');
       
-      // Should include some attributes but exclude noisy ones
-      expect(result).toContain('http.request.id=abc-123');
-      expect(result).toContain('labels.module=api');
-      expect(result).toContain('k8s.namespace.name=production');
-      
-      // Should exclude noisy attributes  
+      // Should NOT include ANY attributes in compact mode
+      expect(result).not.toContain('Attributes:');
+      expect(result).not.toContain('http.request.id');
+      expect(result).not.toContain('labels.module');
+      expect(result).not.toContain('k8s.namespace.name');
       expect(result).not.toContain('log.file.path');
-      expect(result).not.toContain('k8s.node.uid');
-      expect(result).not.toContain('signoz.component');
     });
 
     it('should format single log entry in verbose mode', () => {
@@ -74,16 +71,16 @@ describe('ResponseFormatter', () => {
       expect(result).not.toContain('log.file.path');
     });
 
-    it('should respect explicit exclude_attributes', () => {
+    it('should respect explicit exclude_attributes (no effect in compact mode)', () => {
       const result = ResponseFormatter.formatLogEntries([mockLogEntry], {
         exclude_attributes: ['http.request.id', 'labels.module']
       });
       
-      expect(result).not.toContain('http.request.id=abc-123');
-      expect(result).not.toContain('labels.module=api');
-      
-      // Should still include other non-excluded attributes
-      expect(result).toContain('k8s.namespace.name=production');
+      // In new minimal approach, compact mode shows no attributes regardless
+      expect(result).not.toContain('Attributes:');
+      expect(result).not.toContain('http.request.id');
+      expect(result).not.toContain('labels.module');
+      expect(result).not.toContain('k8s.namespace.name');
     });
 
     it('should handle missing service name gracefully', () => {

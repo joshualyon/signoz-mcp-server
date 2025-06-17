@@ -11,8 +11,8 @@ export class TimeUtils {
   /**
    * Parse time parameter into milliseconds timestamp
    * Supports formats:
-   * - "now-1h", "now-30m" (relative to now)
-   * - "30m", "1h" (ago from now) 
+   * - "now-1h", "now-30m" (legacy format, still supported)
+   * - "30m", "1h" (preferred format, means "ago from now") 
    * - ISO timestamps
    * - Unix timestamps
    */
@@ -21,25 +21,17 @@ export class TimeUtils {
       return Date.now();
     }
     
-    // Handle relative time like "now-1h"
-    if (time.startsWith("now")) {
-      const match = time.match(/now-(\d+)([smhd])/);
-      if (match) {
-        const value = parseInt(match[1]);
-        const unit = match[2];
-        const multiplier = this.TIME_MULTIPLIERS[unit];
-        if (multiplier) {
-          return Date.now() - (value * multiplier);
-        }
-      }
-      return Date.now();
+    // Strip "now-" prefix for backward compatibility, then handle as simple relative time
+    let timeInput = time;
+    if (time.startsWith("now-")) {
+      timeInput = time.substring(4); // Remove "now-" prefix
     }
 
-    // Handle simple relative time like "30m", "1h" (means "30m ago")
-    const simpleMatch = time.match(/^(\d+)([smhd])$/);
-    if (simpleMatch) {
-      const value = parseInt(simpleMatch[1]);
-      const unit = simpleMatch[2];
+    // Handle relative time like "30m", "1h" (means "X ago from now")
+    const relativeMatch = timeInput.match(/^(\d+)([smhd])$/);
+    if (relativeMatch) {
+      const value = parseInt(relativeMatch[1]);
+      const unit = relativeMatch[2];
       const multiplier = this.TIME_MULTIPLIERS[unit];
       if (multiplier) {
         return Date.now() - (value * multiplier);

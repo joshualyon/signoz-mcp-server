@@ -62,7 +62,13 @@ bun run test
 ## Available Tools
 
 ### query_logs
-Query application logs from Signoz using simplified filter syntax.
+Query application logs from Signoz using simplified filter syntax with clean, readable output.
+
+**Key Features:**
+- **Minimal Output by Default**: Clean `[timestamp] [level] [service-context] message` format
+- **Smart Service Context**: Shows `[service-name]` or `[namespace/deployment]` automatically
+- **Verbose Mode**: Full attribute details when needed (`verbose: true`)
+- **Attribute Filtering**: Include only specific attributes (`include_attributes: [...]`)
 
 The tool accepts simple filter syntax with these operators:
 - `key=value` - Exact match
@@ -75,7 +81,39 @@ Join multiple filters with AND:
 - `body~timeout` - Logs containing "timeout" in the message
 - `k8s.namespace=production AND body~error` - Combine resource and content filters
 
-Examples:
+**Output Examples:**
+
+*Default Compact Mode:*
+```
+[2025-06-17T22:26:42Z] [INFO] [default/stio-api]
+Set variable $GridPower value as 1.3377999999999999.
+
+[2025-06-17T22:26:41Z] [ERROR] [api-gateway]
+Database connection timeout after 30s
+
+[2025-06-17T22:26:40Z] [WARN] [production/user-service]
+Rate limit approaching: 450/500 requests
+```
+
+*Verbose Mode (verbose: true):*
+```
+[2025-06-17T22:26:42Z] [INFO] [default/stio-api]
+Set variable $GridPower value as 1.3377999999999999.
+Attributes: http.request.id=abc-123 labels.module=rule trace.id=xyz-789
+
+[2025-06-17T22:26:41Z] [ERROR] [api-gateway]
+Database connection timeout after 30s
+Attributes: error.type=timeout database.name=users http.status=500
+```
+
+*Custom Attributes (include_attributes: ["http.request.id", "trace.id"]):*
+```
+[2025-06-17T22:26:42Z] [INFO] [default/stio-api]
+Set variable $GridPower value as 1.3377999999999999.
+Attributes: http.request.id=abc-123 trace.id=xyz-789
+```
+
+**Query Examples:**
 ```
 "Show logs from the stio-api deployment"
 → query: "k8s.deployment.name=stio-api"
@@ -86,8 +124,11 @@ Examples:
 "Get logs containing 'timeout' from production namespace"
 → query: "k8s.namespace=production AND body~timeout"
 
-"Find logs with database errors"
-→ query: "body~database AND body~error"
+"Find logs with database errors, showing trace IDs"
+→ query: "body~database AND body~error", include_attributes: ["trace.id"]
+
+"Debug logs with full details"
+→ query: "level=debug AND service=user-api", verbose: true
 ```
 
 ### query_metrics
@@ -108,6 +149,7 @@ Example:
 
 ## Documentation
 
+- [Usage Examples](docs/usage-examples.md) - Comprehensive examples of log queries and output formats
 - [Planning Document](docs/planning.md) - Feature roadmap and design decisions
 - [API Integration Guide](docs/api-integration.md) - Signoz API details and examples
 - [Configuration Guide](docs/configuration.md) - Setup and troubleshooting

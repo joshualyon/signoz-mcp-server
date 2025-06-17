@@ -27,7 +27,7 @@ describe('Debug Attribute Filtering', () => {
     }
   };
 
-  it('should exclude default noisy attributes in compact mode', () => {
+  it('should show NO attributes in compact mode (new minimal behavior)', () => {
     const result = ResponseFormatter.formatLogEntries([mockLogEntry], { verbose: false });
     
     console.log('=== COMPACT MODE OUTPUT ===');
@@ -38,18 +38,12 @@ describe('Debug Attribute Filtering', () => {
     expect(result).toContain('[2024-01-15T10:30:00Z] [info] [test-service]');
     expect(result).toContain('Test log message');
     
-    // Should include useful attributes
-    expect(result).toContain('http.request.id=abc-123');
-    expect(result).toContain('labels.module=rule');
-    expect(result).toContain('k8s.namespace.name=default');
-    
-    // Should exclude noisy attributes
+    // Should NOT include ANY attributes in compact mode
+    expect(result).not.toContain('Attributes:');
+    expect(result).not.toContain('http.request.id');
+    expect(result).not.toContain('labels.module');
+    expect(result).not.toContain('k8s.namespace.name');
     expect(result).not.toContain('log.file.path');
-    expect(result).not.toContain('log.iostream');
-    expect(result).not.toContain('k8s.node.uid');
-    expect(result).not.toContain('k8s.pod.uid');
-    expect(result).not.toContain('signoz.component');
-    expect(result).not.toContain('host.name');
   });
 
   it('should include all attributes in verbose mode', () => {
@@ -73,8 +67,9 @@ describe('Debug Attribute Filtering', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
     
-    // Should behave like compact mode
+    // Should behave like compact mode - NO attributes
     expect(result).toContain('[2024-01-15T10:30:00Z] [info] [test-service]');
+    expect(result).not.toContain('Attributes:');
     expect(result).not.toContain('log.file.path');
     expect(result).not.toContain('signoz.component');
   });
@@ -86,9 +81,28 @@ describe('Debug Attribute Filtering', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
     
-    // Should behave like compact mode
+    // Should behave like compact mode - NO attributes
     expect(result).toContain('[2024-01-15T10:30:00Z] [info] [test-service]');
+    expect(result).not.toContain('Attributes:');
     expect(result).not.toContain('log.file.path');
     expect(result).not.toContain('signoz.component');
+  });
+
+  it('should show attributes only when explicitly included', () => {
+    const result = ResponseFormatter.formatLogEntries([mockLogEntry], {
+      include_attributes: ['http.request.id', 'labels.module']
+    });
+    
+    console.log('=== EXPLICIT INCLUDE OUTPUT ===');
+    console.log(result);
+    console.log('=== END OUTPUT ===');
+    
+    // Should include basic structure
+    expect(result).toContain('[2024-01-15T10:30:00Z] [info] [test-service]');
+    
+    // Should include ONLY explicitly requested attributes
+    expect(result).toContain('Attributes: http.request.id=abc-123 labels.module=rule');
+    expect(result).not.toContain('k8s.namespace.name');
+    expect(result).not.toContain('log.file.path');
   });
 });
