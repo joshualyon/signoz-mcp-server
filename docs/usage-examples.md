@@ -65,6 +65,43 @@ Database connection timeout after 30s
 Attributes: trace.id=def-456
 ```
 
+## Pagination Workflow
+
+The SigNoz MCP server automatically handles large result sets with timestamp-based pagination:
+
+### Example: Paginated Error Investigation
+
+```bash
+# Step 1: Initial query (gets newest errors)
+query: "level=error AND k8s.namespace=production"
+start: "now-1h"
+limit: 50
+```
+
+**Response includes pagination hint:**
+```
+Found 50 log entries
+[... 50 newest error logs ...]
+
+--- More Results Available ---
+Oldest timestamp: 2025-06-17T22:30:15.123456789Z
+To get next 50 older results, use: end="2025-06-17T22:30:15.123456789Z"
+```
+
+```bash
+# Step 2: Get next page (older errors)
+query: "level=error AND k8s.namespace=production"
+start: "now-1h"
+end: "2025-06-17T22:30:15.123456789Z"  # From pagination hint
+limit: 50
+```
+
+**Benefits:**
+- Natural chronological progression (newest → oldest)
+- No data overlap or gaps
+- Works with any time range
+- Clear instructions for AI agents
+
 ## Common Usage Patterns
 
 ### 1. Quick Service Health Check

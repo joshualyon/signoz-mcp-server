@@ -65,6 +65,7 @@ export interface FormattingOptions {
   verbose?: boolean;
   include_attributes?: string[];
   exclude_attributes?: string[];
+  limit?: number;  // For pagination hints
 }
 
 export interface Filter {

@@ -69,6 +69,7 @@ Query application logs from Signoz using simplified filter syntax with clean, re
 - **Smart Service Context**: Shows `[service-name]` or `[namespace/deployment]` automatically
 - **Verbose Mode**: Full attribute details when needed (`verbose: true`)
 - **Attribute Filtering**: Include only specific attributes (`include_attributes: [...]`)
+- **Automatic Pagination**: Handles large result sets with clear instructions for next page
 
 The tool accepts simple filter syntax with these operators:
 - `key=value` - Exact match
@@ -129,6 +130,14 @@ Attributes: http.request.id=abc-123 trace.id=xyz-789
 
 "Debug logs with full details"
 → query: "level=debug AND service=user-api", verbose: true
+```
+
+**Pagination Example:**
+When results exceed the limit, the tool provides clear instructions:
+```
+--- More Results Available ---
+Oldest timestamp: 2025-06-17T23:09:19.025991988Z
+To get next 100 older results, use: end="2025-06-17T23:09:19.025991988Z"
 ```
 
 ### query_metrics

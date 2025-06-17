@@ -43,7 +43,8 @@ export class SignozApi {
       return ResponseFormatter.formatLogEntries(logs, {
         verbose: params.verbose,
         include_attributes: params.include_attributes,
-        exclude_attributes: params.exclude_attributes
+        exclude_attributes: params.exclude_attributes,
+        limit: params.limit
       });
     } catch (error: any) {
       return `Error querying logs: ${error.message}`;

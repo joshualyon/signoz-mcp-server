@@ -24,6 +24,16 @@ export class ResponseFormatter {
       formattedText += '\n';
     });
 
+    // Add pagination hint if we hit the limit
+    if (options.limit && logs.length === options.limit && logs.length > 0) {
+      const oldestTimestamp = this.extractOldestTimestamp(logs);
+      if (oldestTimestamp) {
+        formattedText += `\n--- More Results Available ---\n`;
+        formattedText += `Oldest timestamp: ${oldestTimestamp}\n`;
+        formattedText += `To get next ${options.limit} older results, use: end="${oldestTimestamp}"\n`;
+      }
+    }
+
     return formattedText;
   }
 
@@ -168,5 +178,19 @@ export class ResponseFormatter {
     }
     
     return 'unknown';
+  }
+
+  /**
+   * Extract the oldest timestamp from log entries for pagination
+   */
+  private static extractOldestTimestamp(logs: any[]): string | null {
+    if (logs.length === 0) return null;
+
+    // Logs should be sorted newest to oldest, so last entry is oldest
+    const oldestEntry = logs[logs.length - 1];
+    if (!oldestEntry?.timestamp) return null;
+
+    // Format timestamp consistently
+    return TimeUtils.formatTimestamp(oldestEntry.timestamp);
   }
 }

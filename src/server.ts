@@ -47,7 +47,7 @@ class SignozMCPServer {
       tools: [
         {
           name: "query_logs",
-          description: "Query logs from Signoz using simplified filter syntax",
+          description: "Query logs from Signoz using simplified filter syntax. Automatically provides pagination hints when results exceed limit.",
           inputSchema: {
             type: "object",
             properties: {
@@ -57,11 +57,11 @@ class SignozMCPServer {
               },
               start: {
                 type: "string",
-                description: "Start time (ISO 8601 or Unix timestamp)",
+                description: "Start time (ISO 8601, Unix timestamp, or relative like '30m', '1h', 'now-2h')",
               },
               end: {
                 type: "string",
-                description: "End time (ISO 8601 or Unix timestamp)",
+                description: "End time (ISO 8601, Unix timestamp, or relative like '30m', '1h'). Use timestamp from pagination hint to get next page of older results.",
               },
               limit: {
                 type: "number",
@@ -104,11 +104,11 @@ class SignozMCPServer {
               },
               start: {
                 type: "string",
-                description: "Start time (ISO 8601 or Unix timestamp)",
+                description: "Start time (ISO 8601, Unix timestamp, or relative like '30m', '1h', 'now-2h')",
               },
               end: {
                 type: "string",
-                description: "End time (ISO 8601 or Unix timestamp)",
+                description: "End time (ISO 8601, Unix timestamp, or relative like '30m', '1h')",
               },
               step: {
                 type: "string",
@@ -131,11 +131,11 @@ class SignozMCPServer {
               },
               start: {
                 type: "string",
-                description: "Start time (ISO 8601 or Unix timestamp)",
+                description: "Start time (ISO 8601, Unix timestamp, or relative like '30m', '1h', 'now-2h')",
               },
               end: {
                 type: "string",
-                description: "End time (ISO 8601 or Unix timestamp)",
+                description: "End time (ISO 8601, Unix timestamp, or relative like '30m', '1h')",
               },
               limit: {
                 type: "number",
@@ -233,6 +233,7 @@ class SignozMCPServer {
 3. **query_logs** - Query logs with discovered attributes
    → Use the attribute names from step 2
    → Start with simple queries, then combine filters
+   → Automatic pagination when results exceed limit
 
 ## 📊 For Metrics (Coming Soon)
 - query_metrics - Use PromQL queries for metrics
@@ -243,7 +244,9 @@ class SignozMCPServer {
 ## 💡 Tips
 - Always run discover_log_attributes first in a new environment
 - Use the exact attribute names shown in discovery
-- Time ranges default to last hour if not specified`;
+- Time ranges default to last hour if not specified
+- Use relative times for convenience: '30m', '1h', '2d', 'now-15m'
+- When pagination appears, use the provided 'end' parameter for next page`;
     }
     
     else if (topic === "queries") {
@@ -274,9 +277,10 @@ class SignozMCPServer {
 - body (log message content)
 
 ## Time Ranges
-- now-1h (last hour)
-- now-15m (last 15 minutes)
-- ISO timestamps (2024-01-20T10:00:00Z)`;
+- Relative: '30m', '1h', '2d' (X ago from now)
+- Legacy: 'now-1h', 'now-15m' (still supported)
+- ISO timestamps: '2024-01-20T10:00:00Z'
+- Unix timestamps: 1640995200`;
     }
     
     else if (topic === "examples") {

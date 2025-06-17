@@ -48,6 +48,10 @@ export class TimeUtils {
    * Handles various timestamp formats from SigNoz
    */
   static formatTimestamp(timestampValue: any): string {
+    if (!timestampValue) {
+      return new Date().toISOString(); // Fallback to current time
+    }
+    
     if (typeof timestampValue === 'string') {
       return timestampValue;
     } else if (timestampValue > 1e15) {
