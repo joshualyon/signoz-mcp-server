@@ -1,0 +1,24 @@
+{
+  "name": "signoz-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for exposing Signoz observability data to Claude",
+  "main": "src/server.ts",
+  "module": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "build": "bun build src/server.ts --compile --outfile signoz-mcp-server",
+    "inspector": "npx @modelcontextprotocol/inspector bun run src/server.ts",
+    "test": "bun run test-server.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.0.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.3"
+  }
+}
