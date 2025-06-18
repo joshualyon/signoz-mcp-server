@@ -1,6 +1,6 @@
 // Query construction logic for SigNoz API
 
-import { 
+import type { 
   LogQueryParams, 
   MetricsQueryParams, 
   TracesQueryParams, 

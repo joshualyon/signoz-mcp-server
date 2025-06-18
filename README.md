@@ -152,11 +152,26 @@ To get next 100 older results, use: end="2025-06-17T23:09:19.025991988Z"
 ```
 
 ### query_metrics
-Query metrics using PromQL syntax.
+Query metrics using a builder-based interface with aggregation and grouping.
 
-Example:
+**Key Features:**
+- **Multiple Metrics**: Query multiple metrics in one request
+- **Aggregation Options**: avg, min, max, sum, count
+- **Grouping**: Group results by attributes
+- **Filter Syntax**: Same as logs (key=value, key~contains, key!=value)
+
+**Examples:**
 ```
-"Show me the HTTP request rate for all services over the last 6 hours"
+"Show CPU utilization for the stio-api deployment"
+→ metric: ["k8s_pod_cpu_utilization"], query: "k8s_deployment_name=stio-api"
+
+"Compare CPU and memory usage grouped by pod"
+→ metric: ["k8s_pod_cpu_utilization", "k8s_pod_memory_usage"], 
+  group_by: ["k8s_pod_name"], aggregation: "avg"
+
+"Get maximum request rates by status code"
+→ metric: ["http_requests_total"], group_by: ["status_code"], 
+  aggregation: "max", query: "service=api-gateway"
 ```
 
 ### query_traces
@@ -170,9 +185,40 @@ Example:
 ## Documentation
 
 - [Usage Examples](docs/usage-examples.md) - Comprehensive examples of log queries and output formats
-- [Planning Document](docs/planning.md) - Feature roadmap and design decisions
+- [Development Guide](docs/development.md) - Build, test, and release processes
+- [Configuration Guide](docs/configuration.md) - Setup and troubleshooting  
 - [API Integration Guide](docs/api-integration.md) - Signoz API details and examples
-- [Configuration Guide](docs/configuration.md) - Setup and troubleshooting
+- [Planning Document](docs/planning.md) - Feature roadmap and design decisions
+
+## Development
+
+### Building
+
+```bash
+# Build for current platform
+bun run build
+
+# Build for all platforms
+bun run build:binary:all
+
+# Run tests
+bun test
+```
+
+### Releases
+
+This project uses automated semantic versioning. See [Development Guide](docs/development.md) for details on:
+- Commit message conventions
+- Automated release process
+- Manual release procedures
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/amazing-feature`)
+3. Commit changes using conventional commits (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feat/amazing-feature`)
+5. Open a Pull Request to `main`
 
 ## License
 

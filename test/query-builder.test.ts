@@ -62,19 +62,19 @@ describe('QueryBuilder', () => {
       const filters = result.compositeQuery.builderQueries.A.filters.items;
       
       // k8s attributes should be resource type
-      const k8sFilter = filters.find(f => f.key.key === 'k8s.pod.name');
+      const k8sFilter = filters.find((f: any) => f.key.key === 'k8s.pod.name');
       expect(k8sFilter?.key.type).toBe('resource');
       
       // service should be resource type
-      const serviceFilter = filters.find(f => f.key.key === 'service');
+      const serviceFilter = filters.find((f: any) => f.key.key === 'service');
       expect(serviceFilter?.key.type).toBe('resource');
       
       // body and level should be tag type
-      const bodyFilter = filters.find(f => f.key.key === 'body');
+      const bodyFilter = filters.find((f: any) => f.key.key === 'body');
       expect(bodyFilter?.key.type).toBe('tag');
       expect(bodyFilter?.key.isColumn).toBe(true);
       
-      const levelFilter = filters.find(f => f.key.key === 'level');
+      const levelFilter = filters.find((f: any) => f.key.key === 'level');
       expect(levelFilter?.key.type).toBe('tag');
     });
 

@@ -175,5 +175,7 @@ dist
 .DS_Store
 
 # Bun build output
-signoz-mcp-server
+bin/
 bun.lockb
+# legacy direct binary at root
+signoz-mcp-server 

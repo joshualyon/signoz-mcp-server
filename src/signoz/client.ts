@@ -1,6 +1,6 @@
 // HTTP client for SigNoz API communication
 
-import { SignozConfig, QueryRangeRequest, ConnectionResult } from './types.js';
+import type { SignozConfig, QueryRangeRequest, ConnectionResult } from './types.js';
 
 export class SignozClient {
   private config: SignozConfig;

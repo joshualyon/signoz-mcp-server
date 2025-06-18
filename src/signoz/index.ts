@@ -3,7 +3,7 @@
 import { SignozClient } from './client.js';
 import { QueryBuilder } from './query-builder.js';
 import { ResponseFormatter } from './formatters.js';
-import { 
+import type { 
   SignozConfig, 
   LogQueryParams, 
   MetricsQueryParams, 

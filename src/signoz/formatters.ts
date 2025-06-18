@@ -1,6 +1,6 @@
 // Response formatting logic for SigNoz API responses
 
-import { LogEntry, FormattingOptions } from './types.js';
+import type { LogEntry, FormattingOptions } from './types.js';
 import { TimeUtils } from './time-utils.js';
 
 export class ResponseFormatter {

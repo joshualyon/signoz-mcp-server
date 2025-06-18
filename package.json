@@ -1,13 +1,20 @@
 {
   "name": "signoz-mcp-server",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "MCP server for exposing Signoz observability data to Claude",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/signoz-mcp-server.git"
+  },
   "main": "src/server.ts",
   "module": "src/server.ts",
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",
-    "build": "bun build src/server.ts --compile --outfile signoz-mcp-server",
+    "typecheck": "bunx tsc --noEmit",
+    "build": "bun scripts/build.ts --local",
+    "build:binary": "bun scripts/build.ts --local",
+    "build:binary:all": "bun scripts/build.ts",
     "inspector": "npx @modelcontextprotocol/inspector bun run src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -20,7 +27,13 @@
     "@types/bun": "latest",
     "@types/node": "^24.0.3",
     "@vitest/ui": "^3.2.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "semantic-release": "^24.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/release-notes-generator": "^14.0.0",
+    "@semantic-release/github": "^11.0.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

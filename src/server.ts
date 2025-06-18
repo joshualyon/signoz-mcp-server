@@ -6,7 +6,9 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { 
-  SignozApi, 
+  SignozApi
+} from './signoz/index.js';
+import type { 
   SignozConfig, 
   LogQueryParams, 
   MetricsQueryParams, 
