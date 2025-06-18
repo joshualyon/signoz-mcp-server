@@ -121,6 +121,37 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore: update dependencies`
 - `feat!: change API interface` (breaking change)
 
+## Changelog Management
+
+### Manual Updates Required
+
+**Always update `CHANGELOG.md` [Unreleased] section** when making significant changes:
+
+```markdown
+## [Unreleased]
+
+### Added
+- New features that users will benefit from
+
+### Changed  
+- Modifications to existing functionality
+
+### Fixed
+- Bug fixes and corrections
+```
+
+### Guidelines
+
+- **User-focused language** - Describe impact, not implementation
+- **Good**: "Add cross-platform binary builds for easier distribution"
+- **Avoid**: "feat: implement bun build --compile with target flags"
+
+### Automated Process
+
+1. **You manually update** `[Unreleased]` section during development
+2. **Semantic-release automatically** moves content to versioned section on release
+3. **Keep the format** - semantic-release preserves the structure
+
 ## CI/CD Workflows
 
 ### GitHub Actions

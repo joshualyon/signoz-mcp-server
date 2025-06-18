@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial SignozMCP server implementation
-- Logs querying with builder pattern
-- Metrics querying with cross-platform support  
-- Comprehensive timestamp handling and validation
-- Cross-platform binary builds
-- Automated release workflow
+- Complete automated release system with semantic versioning
+- Cross-platform binary builds for all major platforms (macOS, Linux, Windows)
+- Unified build script with flexible platform targeting
+- Comprehensive development documentation and contributing guidelines
+
+### Changed
+- Improved type safety with proper import type statements
+- Enhanced build system with better error handling and validation
+- Updated documentation to reflect new release processes
+
+### Fixed
+- TypeScript verbatimModuleSyntax compliance issues
+- Build system reliability and cross-platform compatibility
