@@ -9,6 +9,8 @@ import {
   MetricsQueryParams, 
   TracesQueryParams, 
   DiscoveryParams,
+  MetricDiscoveryParams,
+  MetricAttributesParams,
   ConnectionResult 
 } from './types.js';
 
@@ -154,6 +156,69 @@ export class SignozApi {
              `Server: ${this.client.getConfig().baseUrl}\n` +
              `Error: ${result.error}\n\n` +
              `Please check your SIGNOZ_BASE_URL and SIGNOZ_API_KEY environment variables.`;
+    }
+  }
+
+  /**
+   * Discover available metrics (UNOFFICIAL endpoint)
+   */
+  async discoverMetrics(params: MetricDiscoveryParams): Promise<string> {
+    try {
+      const timeRange = params.time_range || "1h";
+      const limit = params.limit || 50;
+      
+      console.error(`Discovering metrics with time range: ${timeRange}, limit: ${limit}`);
+      console.error(`⚠️  Using unofficial/internal SigNoz endpoint`);
+      
+      const response = await this.client.discoverMetrics(timeRange, limit);
+      const metrics = response.data?.metrics || [];
+      
+      return ResponseFormatter.formatMetricsList(metrics);
+    } catch (error: any) {
+      let errorMessage = `Error discovering metrics: ${error.message}`;
+      
+      // Add helpful context for common errors
+      if (error.message.includes('404') || error.message.includes('Not Found')) {
+        errorMessage += `\n\nThe metrics discovery endpoint may not be available in this SigNoz version.`;
+      } else if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+        errorMessage += `\n\nTip: Try reducing the time range or limit:
+- time_range: "30m"
+- limit: 20`;
+      } else if (error.message.includes('403') || error.message.includes('401')) {
+        errorMessage += `\n\nAuthentication issue. Please check your SIGNOZ_API_KEY.`;
+      }
+      
+      return errorMessage;
+    }
+  }
+
+  /**
+   * Discover attributes for a specific metric (UNOFFICIAL endpoint)
+   */
+  async discoverMetricAttributes(params: MetricAttributesParams): Promise<string> {
+    try {
+      console.error(`Discovering attributes for metric: ${params.metric_name}`);
+      console.error(`⚠️  Using unofficial/internal SigNoz endpoint`);
+      
+      const response = await this.client.getMetricMetadata(params.metric_name);
+      const metadata = response.data;
+      
+      return ResponseFormatter.formatMetricAttributes(metadata);
+    } catch (error: any) {
+      let errorMessage = `Error discovering metric attributes: ${error.message}`;
+      
+      // Add helpful context for common errors
+      if (error.message.includes('404')) {
+        errorMessage += `\n\nThe metric "${params.metric_name}" may not exist or the internal endpoint may not be available.
+Try running discover_metrics first to see available metrics.`;
+      } else if (error.message.includes('400')) {
+        errorMessage += `\n\nInvalid metric name format. Make sure to use the exact metric name from discover_metrics.`;
+      } else if (error.message.includes('403') || error.message.includes('401')) {
+        errorMessage += `\n\nAuthentication issue. Please check your SIGNOZ_API_KEY.`;
+      }
+      
+      
+      return errorMessage;
     }
   }
 

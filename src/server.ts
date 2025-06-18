@@ -11,7 +11,9 @@ import {
   LogQueryParams, 
   MetricsQueryParams, 
   TracesQueryParams, 
-  DiscoveryParams 
+  DiscoveryParams,
+  MetricDiscoveryParams,
+  MetricAttributesParams
 } from './signoz/index.js';
 
 class SignozMCPServer {
@@ -187,6 +189,39 @@ class SignozMCPServer {
             },
           },
         },
+        {
+          name: "discover_metrics",
+          description: "Discover available metrics with activity statistics and categorization. Lists metrics sorted by sample count with type, description, and usage information.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              time_range: {
+                type: "string",
+                description: "Time range to analyze metric activity (default: '1h'). Examples: '30m', '2h', '1d'",
+                default: "1h",
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of metrics to return (default: 50)",
+                default: 50,
+              },
+            },
+          },
+        },
+        {
+          name: "discover_metric_attributes",
+          description: "Discover labels/attributes for a specific metric. Shows all available labels with sample values, cardinality, and example queries.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              metric_name: {
+                type: "string",
+                description: "Name of the metric to analyze (use discover_metrics to find available metrics)",
+              },
+            },
+            required: ["metric_name"],
+          },
+        },
       ],
     }));
 
@@ -206,6 +241,10 @@ class SignozMCPServer {
           return await this.testConnection();
         case "discover_log_attributes":
           return await this.discoverLogAttributes(args);
+        case "discover_metrics":
+          return await this.discoverMetrics(args);
+        case "discover_metric_attributes":
+          return await this.discoverMetricAttributes(args);
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
@@ -235,8 +274,10 @@ class SignozMCPServer {
    → Start with simple queries, then combine filters
    → Automatic pagination when results exceed limit
 
-## 📊 For Metrics (Coming Soon)
-- query_metrics - Use PromQL queries for metrics
+## 📊 For Metrics
+- **discover_metrics** - List available metrics with activity stats
+- **discover_metric_attributes** - Show labels for specific metrics  
+- **query_metrics** - Use PromQL queries for metrics
 
 ## 🔍 For Traces (Coming Soon)  
 - query_traces - Search distributed traces
@@ -439,6 +480,41 @@ end: "2024-01-20T11:00:00Z"
 
     const result = await this.signozApi.discoverLogAttributes(params);
 
+    return {
+      content: [
+        {
+          type: "text",
+          text: result,
+        },
+      ],
+    };
+  }
+
+  private async discoverMetrics(args: any) {
+    const params: MetricDiscoveryParams = {
+      time_range: args.time_range,
+      limit: args.limit,
+    };
+
+    const result = await this.signozApi.discoverMetrics(params);
+    
+    return {
+      content: [
+        {
+          type: "text",
+          text: result,
+        },
+      ],
+    };
+  }
+
+  private async discoverMetricAttributes(args: any) {
+    const params: MetricAttributesParams = {
+      metric_name: args.metric_name,
+    };
+
+    const result = await this.signozApi.discoverMetricAttributes(params);
+    
     return {
       content: [
         {

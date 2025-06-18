@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { SignozApi } from '../src/signoz/index.js';
 import type { SignozConfig } from '../src/signoz/types.js';
+import { setupIntegrationTests } from './test-utils.js';
 
 describe('SignozApi Integration Tests', () => {
+  const { shouldSkipIntegrationTests } = setupIntegrationTests();
   let signozApi: SignozApi;
   let config: SignozConfig;
 
@@ -15,36 +17,20 @@ describe('SignozApi Integration Tests', () => {
   });
 
   describe('connection', () => {
-    it('should test connection successfully', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping connection test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should test connection successfully', async () => {
 
       const result = await signozApi.testConnection();
       expect(result).toContain('Connection successful');
     });
 
-    it('should check connectivity', async () => {
-      // Skip if no real API credentials  
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping connectivity test - no SIGNOZ_API_KEY provided');
-        return;
-      }
-
+    it.skipIf(shouldSkipIntegrationTests)('should check connectivity', async () => {
       const isConnected = await signozApi.checkConnectivity();
       expect(isConnected).toBe(true);
     });
   });
 
   describe('log querying with attribute filtering', () => {
-    it('should filter attributes in compact mode', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping log query test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should filter attributes in compact mode', async () => {
 
       const result = await signozApi.queryLogs({
         query: 'k8s.deployment.name=stio-api',
@@ -67,12 +53,7 @@ describe('SignozApi Integration Tests', () => {
       expect(result).not.toContain('k8s.pod.start_time');
     });
 
-    it('should include all attributes in verbose mode', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping verbose log query test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should include all attributes in verbose mode', async () => {
 
       const result = await signozApi.queryLogs({
         query: 'k8s.deployment.name=stio-api',
@@ -91,12 +72,7 @@ describe('SignozApi Integration Tests', () => {
       expect(result).toContain('log.file.path') || expect(result).toContain('k8s.node.uid');
     });
 
-    it('should respect explicit exclude_attributes', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping exclude attributes test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should respect explicit exclude_attributes', async () => {
 
       const result = await signozApi.queryLogs({
         query: 'k8s.deployment.name=stio-api',
@@ -113,12 +89,7 @@ describe('SignozApi Integration Tests', () => {
       expect(result).not.toContain('labels.module');
     });
 
-    it('should respect explicit include_attributes', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping include attributes test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should respect explicit include_attributes', async () => {
 
       const result = await signozApi.queryLogs({
         query: 'k8s.deployment.name=stio-api',
@@ -137,8 +108,8 @@ describe('SignozApi Integration Tests', () => {
   });
 
   describe('time parsing', () => {
-    it('should parse different time formats correctly', async () => {
-      // This is a unit test that doesn't require API connection
+    it.skipIf(shouldSkipIntegrationTests)('should parse different time formats correctly', async () => {
+      // This test validates time format parsing behavior
       const result1 = await signozApi.queryLogs({
         query: '',
         start: '30m', // Simple format

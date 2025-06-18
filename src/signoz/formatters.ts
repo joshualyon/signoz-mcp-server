@@ -87,6 +87,182 @@ export class ResponseFormatter {
   }
 
   /**
+   * Format metrics list for display
+   */
+  static formatMetricsList(metrics: any[]): string {
+    if (!metrics || metrics.length === 0) {
+      return `No metrics found in the specified time range.`;
+    }
+
+    let formattedText = `# Metrics Discovery Results
+
+Found ${metrics.length} metrics
+
+## 📊 Top Metrics by Activity\n\n`;
+
+    // Sort metrics by samples and show top ones
+    const sortedMetrics = [...metrics].sort((a, b) => (b.samples || 0) - (a.samples || 0));
+    
+    sortedMetrics.slice(0, 15).forEach((metric: any) => {
+      formattedText += `**${metric.metric_name}** (${metric.type})\n`;
+      formattedText += `  Samples: ${(metric.samples || 0).toLocaleString()} | Series: ${(metric.timeseries || 0).toLocaleString()}\n`;
+      if (metric.description) {
+        formattedText += `  Description: ${metric.description}\n`;
+      }
+      if (metric.unit && metric.unit !== '') {
+        formattedText += `  Unit: ${metric.unit}\n`;
+      }
+      formattedText += '\n';
+    });
+
+    // Group metrics by type for easier browsing
+    const groupedMetrics = this.groupMetricsByCategory(metrics);
+    
+    if (Object.keys(groupedMetrics).length > 1) {
+      formattedText += `## 📈 Metric Categories\n\n`;
+      Object.entries(groupedMetrics).forEach(([category, categoryMetrics]) => {
+        formattedText += `**${category} (${categoryMetrics.length})**\n`;
+        categoryMetrics.slice(0, 8).forEach((metric: any) => {
+          formattedText += `- ${metric.metric_name}\n`;
+        });
+        if (categoryMetrics.length > 8) {
+          formattedText += `- ... and ${categoryMetrics.length - 8} more\n`;
+        }
+        formattedText += '\n';
+      });
+    }
+
+    formattedText += `## 🔍 Example Queries\n\n`;
+    
+    // Generate smart examples based on discovered metrics
+    const firstMetric = sortedMetrics[0];
+    if (firstMetric) {
+      formattedText += `**Basic queries:**\n`;
+      formattedText += `• ${firstMetric.metric_name}\n`;
+      if (firstMetric.type === 'Histogram') {
+        formattedText += `• histogram_quantile(0.95, ${firstMetric.metric_name})\n`;
+      }
+      formattedText += `• rate(${firstMetric.metric_name}[5m])\n`;
+      formattedText += `• sum(${firstMetric.metric_name}) by (service_name)\n\n`;
+    }
+    
+    formattedText += `**To explore metric labels:**\n`;
+    formattedText += `Use discover_metric_attributes({metric_name: "${firstMetric?.metric_name || 'metric_name'}"})`;
+
+    return formattedText;
+  }
+
+  /**
+   * Format metric attributes/metadata for display
+   */
+  static formatMetricAttributes(metadata: any): string {
+    if (!metadata) {
+      return `Error: Unable to retrieve metric metadata.`;
+    }
+
+    let formattedText = `# Metric: ${metadata.name}
+
+**Type:** ${metadata.type} | **Unit:** ${metadata.unit || 'none'}
+**Description:** ${metadata.description || 'No description available'}
+**Activity:** ${(metadata.samples || 0).toLocaleString()} samples | ${(metadata.timeSeriesTotal || 0).toLocaleString()} total series | ${(metadata.timeSeriesActive || 0).toLocaleString()} active series
+
+`;
+
+    if (metadata.metadata) {
+      formattedText += `**Metadata:** Temporality: ${metadata.metadata.temporality || 'unknown'} | Monotonic: ${metadata.metadata.monotonic || false}\n\n`;
+    }
+
+    if (metadata.attributes && metadata.attributes.length > 0) {
+      formattedText += `## 🏷️ Labels (Attributes)\n\n`;
+      
+      // Sort attributes by value count (most diverse first)
+      const sortedAttrs = [...metadata.attributes].sort((a, b) => (b.valueCount || 0) - (a.valueCount || 0));
+      
+      sortedAttrs.forEach((attr: any) => {
+        formattedText += `**${attr.key}** (${(attr.valueCount || 0).toLocaleString()} unique values)\n`;
+        if (attr.value && attr.value.length > 0) {
+          const sampleValues = attr.value.slice(0, 5).join(', ');
+          const hasMore = attr.value.length > 5 || attr.valueCount > attr.value.length;
+          formattedText += `  Sample values: ${sampleValues}${hasMore ? '...' : ''}\n`;
+        }
+        formattedText += '\n';
+      });
+
+      formattedText += `## 🔍 Example Queries\n*Based on discovered labels:*\n\n`;
+      
+      const metricName = metadata.name;
+      const firstAttr = sortedAttrs[0];
+      const secondAttr = sortedAttrs[1];
+      
+      if (firstAttr && firstAttr.value?.length > 0) {
+        formattedText += `**Filter by ${firstAttr.key}:**\n`;
+        formattedText += `• ${metricName}{${firstAttr.key}="${firstAttr.value[0]}"}\n\n`;
+      }
+      
+      if (firstAttr && secondAttr) {
+        formattedText += `**Aggregate with grouping:**\n`;
+        formattedText += `• sum(rate(${metricName}[5m])) by (${firstAttr.key}, ${secondAttr.key})\n\n`;
+      }
+      
+      if (metadata.type === 'Histogram') {
+        formattedText += `**Histogram functions:**\n`;
+        formattedText += `• histogram_quantile(0.95, ${metricName})\n`;
+        formattedText += `• histogram_quantile(0.50, ${metricName})\n\n`;
+      }
+      
+      formattedText += `**Rate and sum queries:**\n`;
+      formattedText += `• rate(${metricName}[1m])\n`;
+      formattedText += `• increase(${metricName}[5m])\n`;
+      if (firstAttr) {
+        formattedText += `• sum(${metricName}) by (${firstAttr.key})\n`;
+      }
+    } else {
+      formattedText += `## 🏷️ Labels (Attributes)\n\nNo attribute information available for this metric.\n\n`;
+      formattedText += `## 🔍 Basic Queries\n\n`;
+      formattedText += `• ${metadata.name}\n`;
+      formattedText += `• rate(${metadata.name}[5m])\n`;
+      if (metadata.type === 'Histogram') {
+        formattedText += `• histogram_quantile(0.95, ${metadata.name})\n`;
+      }
+    }
+
+    return formattedText;
+  }
+
+  /**
+   * Group metrics into logical categories
+   */
+  private static groupMetricsByCategory(metrics: any[]): Record<string, any[]> {
+    const categories: Record<string, any[]> = {};
+    
+    metrics.forEach(metric => {
+      const name = metric.metric_name.toLowerCase();
+      let category = 'Other';
+      
+      if (name.includes('http') || name.includes('request') || name.includes('response')) {
+        category = 'HTTP Metrics';
+      } else if (name.includes('k8s') || name.includes('kubernetes') || name.includes('pod') || name.includes('container')) {
+        category = 'Kubernetes Metrics';
+      } else if (name.includes('cpu') || name.includes('memory') || name.includes('disk') || name.includes('filesystem')) {
+        category = 'System Metrics';
+      } else if (name.includes('gc') || name.includes('jvm') || name.includes('process')) {
+        category = 'Runtime Metrics';
+      } else if (name.includes('apisix') || name.includes('nginx') || name.includes('proxy')) {
+        category = 'Gateway/Proxy Metrics';
+      } else if (name.includes('db') || name.includes('database') || name.includes('sql')) {
+        category = 'Database Metrics';
+      }
+      
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(metric);
+    });
+    
+    return categories;
+  }
+
+  /**
    * Format compact log entry (default mode) - minimal output
    */
   private static formatCompactLog(entry: any, options: FormattingOptions): string {

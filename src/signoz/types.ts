@@ -35,6 +35,51 @@ export interface DiscoveryParams {
   time_range?: string;
 }
 
+export interface MetricDiscoveryParams {
+  time_range?: string;  // "1h", "24h", etc
+  limit?: number;       // Max metrics to return
+  filter?: string;      // Filter by metric name pattern
+}
+
+export interface MetricAttributesParams {
+  metric_name: string;
+  time_range?: string;
+  sample_size?: number;
+}
+
+export interface MetricInfo {
+  metric_name: string;
+  description: string;
+  type: 'Sum' | 'Gauge' | 'Histogram' | 'Summary';
+  unit: string;
+  timeseries: number;
+  samples: number;
+  lastReceived: number;
+}
+
+export interface MetricAttribute {
+  key: string;
+  value: string[];
+  valueCount: number;
+}
+
+export interface MetricMetadata {
+  name: string;
+  description: string;
+  type: string;
+  unit: string;
+  samples: number;
+  timeSeriesTotal: number;
+  timeSeriesActive: number;
+  lastReceived: number;
+  attributes: MetricAttribute[];
+  metadata: {
+    metric_type: string;
+    temporality: string;
+    monotonic: boolean;
+  };
+}
+
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
 
 export interface LogEntry {

@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { SignozApi } from '../src/signoz/index.js';
 import type { SignozConfig } from '../src/signoz/types.js';
+import { setupIntegrationTests } from './test-utils.js';
 
 describe('Pagination Integration Tests', () => {
+  const { shouldSkipIntegrationTests } = setupIntegrationTests();
   let signozApi: SignozApi;
   
   beforeAll(() => {
@@ -25,12 +27,7 @@ describe('Pagination Integration Tests', () => {
   };
 
   describe('Real pagination behavior', () => {
-    it('should show pagination hint with small limit on real data', async () => {
-      // Skip if no real API credentials
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping pagination test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should show pagination hint with small limit on real data', async () => {
 
       // Query with small limit and shorter time window to avoid timeouts
       const result = await signozApi.queryLogs({
@@ -49,11 +46,7 @@ describe('Pagination Integration Tests', () => {
       expect(result).toContain('To get next 2 older results, use: end=');
     }, 10000);  // 10 second timeout
 
-    it('should handle pagination flow with multiple queries', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping pagination flow test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should handle pagination flow with multiple queries', async () => {
 
       // First query - get 3 results from shorter time window
       const firstResult = await signozApi.queryLogs({
@@ -110,11 +103,7 @@ describe('Pagination Integration Tests', () => {
       }
     }, 15000);  // 15 second timeout
 
-    it('should handle no pagination when results < limit', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping no-pagination test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should handle no pagination when results < limit', async () => {
 
       // Query with large limit unlikely to be hit in short time range
       const result = await signozApi.queryLogs({
@@ -138,11 +127,7 @@ describe('Pagination Integration Tests', () => {
       }
     }, 10000);
 
-    it('should handle different limit values correctly', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping limit variations test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should handle different limit values correctly', async () => {
 
       const limits = [1, 3];  // Test fewer limits to avoid timeout
       
@@ -163,11 +148,7 @@ describe('Pagination Integration Tests', () => {
       }
     }, 15000);
 
-    it('should handle empty results gracefully', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping empty results test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should handle empty results gracefully', async () => {
 
       // Query for something unlikely to exist
       const result = await signozApi.queryLogs({
@@ -186,11 +167,7 @@ describe('Pagination Integration Tests', () => {
   });
 
   describe('Timestamp format handling', () => {
-    it('should extract valid timestamps from real SigNoz data', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping timestamp format test - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should extract valid timestamps from real SigNoz data', async () => {
 
       const result = await signozApi.queryLogs({
         query: 'k8s.deployment.name=stio-api',

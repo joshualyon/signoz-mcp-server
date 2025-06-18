@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { SignozApi } from '../src/signoz/index.js';
 import type { SignozConfig } from '../src/signoz/types.js';
+import { setupIntegrationTests } from './test-utils.js';
 
 describe('Pagination Validation Tests', () => {
+  const { shouldSkipIntegrationTests } = setupIntegrationTests();
   let signozApi: SignozApi;
   
   beforeAll(() => {
@@ -36,11 +38,7 @@ describe('Pagination Validation Tests', () => {
   };
 
   describe('Controlled pagination validation', () => {
-    it('should paginate correctly with known dataset', async () => {
-      if (!process.env.SIGNOZ_API_KEY) {
-        console.log('Skipping pagination validation - no SIGNOZ_API_KEY provided');
-        return;
-      }
+    it.skipIf(shouldSkipIntegrationTests)('should paginate correctly with known dataset', async () => {
 
       // Step 1: Get baseline data from a tiny time window with reasonable limit
       console.log('=== STEP 1: GET BASELINE DATA ===');
