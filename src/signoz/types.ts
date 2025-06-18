@@ -41,6 +41,7 @@ export interface DiscoveryParams {
 export interface MetricDiscoveryParams {
   time_range?: string;  // "1h", "24h", etc
   limit?: number;       // Max metrics to return
+  offset?: number;      // Pagination offset
   filter?: string;      // Filter by metric name pattern
 }
 

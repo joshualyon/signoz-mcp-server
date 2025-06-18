@@ -49,6 +49,31 @@ Supported operators:
 
 See [signoz-api-v4-reference.md](./signoz-api-v4-reference.md) for complete examples.
 
+## Internal/Unofficial Endpoints
+
+The MCP server uses some internal SigNoz endpoints that are not part of the official API:
+
+### Metrics Discovery (`/api/v1/metrics`)
+- **Purpose**: List available metrics with activity statistics
+- **Time-bounded**: ✅ Supports `start`/`end` parameters  
+- **Pagination**: ✅ Supports `limit`/`offset` parameters
+- **Status**: Internal endpoint, may change in future versions
+
+### Metric Attributes (`/api/v1/metrics/{metric}/metadata`) 
+- **Purpose**: Discover labels/attributes for a specific metric
+- **Time-bounded**: ❌ Queries all historical data (no time parameters supported)
+- **Response handling**: Smart sampling - shows first 5 sample values per attribute to prevent massive responses
+- **Status**: Internal endpoint, may change in future versions
+
+**Note**: The attribute discovery endpoint inherently queries all historical data for a metric. While this can return large datasets for high-cardinality metrics, the MCP server mitigates this by:
+- Limiting sample values to 5 per attribute
+- Showing total cardinality counts
+- Indicating truncation with `...`
+
+For time-bounded attribute discovery, potential alternatives include:
+- **Direct ClickHouse access** - Bypass SigNoz API entirely  
+- **SigNoz `clickhouse_sql` query type** - Use raw SQL through the official v4 API (unexplored option)
+
 ## Implementation Notes
 
 The MCP server translates simple filter syntax into the complex composite query structure:

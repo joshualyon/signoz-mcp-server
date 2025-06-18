@@ -58,6 +58,28 @@ export class SignozApi {
    */
   async queryMetrics(params: MetricsQueryParams): Promise<string> {
     try {
+      // Validate required parameters
+      if (!params.metric || params.metric.length === 0) {
+        return `Error: No metrics specified for query.
+
+Please provide at least one metric to query:
+• metric: ["metric_name"]
+• metric: ["metric1", "metric2"]
+
+Use discover_metrics to see available metrics.`;
+      }
+
+      // Validate each metric name
+      const invalidMetrics = params.metric.filter(m => !m || m.trim() === '');
+      if (invalidMetrics.length > 0) {
+        return `Error: Empty or invalid metric names found.
+
+All metric names must be non-empty strings.
+Invalid entries: ${invalidMetrics.length}
+
+Use discover_metrics to see available metrics.`;
+      }
+
       // Build query request
       const request = QueryBuilder.buildMetricsQuery(params);
       
@@ -165,15 +187,17 @@ export class SignozApi {
   async discoverMetrics(params: MetricDiscoveryParams): Promise<string> {
     try {
       const timeRange = params.time_range || "1h";
-      const limit = params.limit || 50;
+      const limit = params.limit || 200;
+      const offset = params.offset || 0;
       
-      console.error(`Discovering metrics with time range: ${timeRange}, limit: ${limit}`);
+      console.error(`Discovering metrics with time range: ${timeRange}, limit: ${limit}, offset: ${offset}`);
       console.error(`⚠️  Using unofficial/internal SigNoz endpoint`);
       
-      const response = await this.client.discoverMetrics(timeRange, limit);
+      const response = await this.client.discoverMetrics(timeRange, limit, offset);
       const metrics = response.data?.metrics || [];
+      const total = response.data?.total;
       
-      return ResponseFormatter.formatMetricsList(metrics);
+      return ResponseFormatter.formatMetricsList(metrics, limit, total, offset);
     } catch (error: any) {
       let errorMessage = `Error discovering metrics: ${error.message}`;
       

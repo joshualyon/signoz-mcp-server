@@ -221,8 +221,13 @@ class SignozMCPServer {
               },
               limit: {
                 type: "number",
-                description: "Maximum number of metrics to return (default: 50)",
-                default: 50,
+                description: "Maximum number of metrics to return (default: 200)",
+                default: 200,
+              },
+              offset: {
+                type: "number",
+                description: "Pagination offset - number of metrics to skip (default: 0)",
+                default: 0,
               },
             },
           },

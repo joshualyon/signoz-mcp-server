@@ -82,7 +82,7 @@ export class SignozClient {
   /**
    * Make HTTP request to metrics discovery endpoints (internal/unofficial)
    */
-  async discoverMetrics(timeRange: string = "1h", limit: number = 50): Promise<any> {
+  async discoverMetrics(timeRange: string = "1h", limit: number = 50, offset: number = 0): Promise<any> {
     const url = `${this.config.baseUrl}/api/v1/metrics`;
     const endTime = Date.now();
     const startTime = endTime - (this.parseTimeRange(timeRange) * 1000);
@@ -100,7 +100,7 @@ export class SignozClient {
           filters: { items: [], op: "AND" },
           orderBy: { columnName: "samples", order: "desc" },
           limit: limit,
-          offset: 0,
+          offset: offset,
           start: startTime,
           end: endTime
         }),
