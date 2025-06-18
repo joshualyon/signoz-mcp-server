@@ -6,6 +6,17 @@ import { TimeUtils } from './time-utils.js';
 export class ResponseFormatter {
 
   /**
+   * Safely format a timestamp, handling invalid dates
+   */
+  private static formatTimestamp(timestamp: number): string {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return `<invalid timestamp: ${timestamp}>`;
+    }
+    return date.toISOString();
+  }
+
+  /**
    * Format log entries for display
    */
   static formatLogEntries(logs: any[], options: FormattingOptions = {}): string {
@@ -43,7 +54,7 @@ export class ResponseFormatter {
   static formatMetricsResponse(response: any, query: string, startTime: number, endTime: number, step: string): string {
     let formattedText = `Metrics query result\n\n`;
     formattedText += `Query: ${query}\n`;
-    formattedText += `Time range: ${new Date(startTime / 1000000).toISOString()} to ${new Date(endTime / 1000000).toISOString()}\n`;
+    formattedText += `Time range: ${this.formatTimestamp(startTime)} to ${this.formatTimestamp(endTime)}\n`;
     formattedText += `Step: ${step}\n\n`;
     
     if (response.data?.result) {
@@ -59,16 +70,16 @@ export class ResponseFormatter {
           if (series.values.length > 6) {
             formattedText += `First 3 values:\n`;
             series.values.slice(0, 3).forEach((v: any) => {
-              formattedText += `  ${new Date(v[0] / 1000000).toISOString()}: ${v[1]}\n`;
+              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
             });
             formattedText += `...\n`;
             formattedText += `Last 3 values:\n`;
             series.values.slice(-3).forEach((v: any) => {
-              formattedText += `  ${new Date(v[0] / 1000000).toISOString()}: ${v[1]}\n`;
+              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
             });
           } else {
             series.values.forEach((v: any) => {
-              formattedText += `  ${new Date(v[0] / 1000000).toISOString()}: ${v[1]}\n`;
+              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
             });
           }
         }

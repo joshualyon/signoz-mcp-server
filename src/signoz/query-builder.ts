@@ -37,11 +37,88 @@ export class QueryBuilder {
     const endTime = TimeUtils.parseTimeParam(params.end || "now");
     const step = TimeUtils.parseStepParam(params.step || "1m");
     
+    // Build filters from query string
+    const filters: Filter[] = [];
+    if (params.query) {
+      const filterParts = params.query.split(/\s+AND\s+/i);
+      filterParts.forEach((part) => {
+        const match = part.match(/^(.+?)(=|!=|~|>|<|>=|<=)(.+)$/);
+        if (match) {
+          const [, key, op, value] = match;
+          let filterOp = op === '=' ? '=' : op === '!=' ? '!=' : op === '~' ? 'contains' : op;
+          const cleanValue = value.trim().replace(/^["']|["']$/g, '');
+          
+          filters.push({
+            id: Math.random().toString(36).substring(7),
+            key: {
+              key: key.trim(),
+              dataType: "string",
+              type: "tag", // metrics attributes are usually tags
+              isColumn: false,
+              isJSON: false
+            },
+            op: filterOp,
+            value: cleanValue
+          });
+        }
+      });
+    }
+
+    // Build group by attributes
+    const groupBy = (params.group_by || []).map(attr => ({
+      dataType: "string",
+      id: `${attr}--string--tag--false`,
+      isColumn: false,
+      key: attr,
+      type: "tag"
+    }));
+
+    // Build builder queries for each metric
+    const builderQueries: { [key: string]: any } = {};
+    params.metric.forEach((metricName, index) => {
+      const queryName = String.fromCharCode(65 + index); // A, B, C, etc.
+      
+      builderQueries[queryName] = {
+        queryName: queryName,
+        dataSource: "metrics",
+        aggregateOperator: params.aggregation || "avg",
+        aggregateAttribute: {
+          key: metricName,
+          type: "Gauge", // Default type, could be detected from discovery
+          id: `${metricName}--float64--Gauge--true`,
+          isColumn: true,
+          isJSON: false,
+          dataType: "float64"
+        },
+        timeAggregation: params.aggregation || "avg",
+        spaceAggregation: params.aggregation || "avg",
+        functions: [],
+        filters: {
+          op: "AND",
+          items: filters
+        },
+        expression: queryName,
+        disabled: false,
+        stepInterval: step,
+        having: [],
+        limit: null,
+        orderBy: [],
+        groupBy: groupBy,
+        legend: params.metric.length > 1 ? metricName : "",
+        reduceTo: params.aggregation || "avg"
+      };
+    });
+
     return {
-      start: startTime * 1000000, // Convert to nanoseconds for metrics
-      end: endTime * 1000000,
+      start: startTime, // Already in milliseconds from TimeUtils
+      end: endTime,
       step: step,
-      query: params.query,
+      compositeQuery: {
+        queryType: "builder",
+        panelType: "graph",
+        fillGaps: false,
+        builderQueries: builderQueries
+      }
     };
   }
 

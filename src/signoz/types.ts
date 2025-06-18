@@ -17,7 +17,10 @@ export interface LogQueryParams {
 }
 
 export interface MetricsQueryParams {
-  query: string;
+  metric: string[];
+  query?: string;
+  aggregation?: string;
+  group_by?: string[];
   start?: string;
   end?: string;
   step?: string;
@@ -157,4 +160,50 @@ export interface CompositeQuery {
       };
     };
   };
+}
+
+export interface MetricBuilderQuery {
+  queryName: string;
+  dataSource: string;
+  aggregateOperator: string;
+  aggregateAttribute: {
+    key: string;
+    type: string;
+    id: string;
+    isColumn: boolean;
+    isJSON: boolean;
+    dataType?: string;
+  };
+  timeAggregation: string;
+  spaceAggregation: string;
+  functions: any[];
+  filters: {
+    op: string;
+    items: Filter[];
+  };
+  expression: string;
+  disabled: boolean;
+  stepInterval: number;
+  having: any[];
+  limit: null;
+  orderBy: any[];
+  groupBy: any[];
+  legend: string;
+  reduceTo: string;
+}
+
+export interface MetricsCompositeQuery {
+  start: number;
+  end: number;
+  step: number;
+  variables?: object;
+  compositeQuery: {
+    queryType: string;
+    panelType: string;
+    fillGaps?: boolean;
+    builderQueries: {
+      [key: string]: MetricBuilderQuery;
+    };
+  };
+  dataSource: string;
 }

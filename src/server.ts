@@ -96,13 +96,30 @@ class SignozMCPServer {
         },
         {
           name: "query_metrics",
-          description: "Query metrics from Signoz",
+          description: "Query metrics from Signoz using builder queries with optional filtering and grouping",
           inputSchema: {
             type: "object",
             properties: {
+              metric: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 1,
+                description: "Metric names to query (e.g., ['k8s_pod_cpu_utilization', 'k8s_pod_memory_usage'])",
+              },
               query: {
                 type: "string",
-                description: "PromQL query string",
+                description: "Simple filter syntax: key=value (equals), key~value (contains), key!=value (not equals). Join with AND. Examples: 'k8s_deployment_name=stio-api', 'k8s_namespace_name=default AND k8s_pod_name~stio-api'",
+              },
+              aggregation: {
+                type: "string",
+                enum: ["avg", "min", "max", "sum", "count"],
+                default: "avg",
+                description: "Aggregation method for the metrics",
+              },
+              group_by: {
+                type: "array",
+                items: { type: "string" },
+                description: "Attributes to group results by (e.g., ['k8s_pod_name', 'k8s_namespace_name'])",
               },
               start: {
                 type: "string",
@@ -118,7 +135,7 @@ class SignozMCPServer {
                 default: "1m",
               },
             },
-            required: ["query"],
+            required: ["metric"],
           },
         },
         {
@@ -277,7 +294,7 @@ class SignozMCPServer {
 ## 📊 For Metrics
 - **discover_metrics** - List available metrics with activity stats
 - **discover_metric_attributes** - Show labels for specific metrics  
-- **query_metrics** - Use PromQL queries for metrics
+- **query_metrics** - Query metrics using builder queries with filtering and grouping
 
 ## 🔍 For Traces (Coming Soon)  
 - query_traces - Search distributed traces
@@ -421,7 +438,10 @@ end: "2024-01-20T11:00:00Z"
 
   private async queryMetrics(args: any) {
     const params: MetricsQueryParams = {
+      metric: args.metric,
       query: args.query,
+      aggregation: args.aggregation || 'avg',
+      group_by: args.group_by,
       start: args.start,
       end: args.end,
       step: args.step,

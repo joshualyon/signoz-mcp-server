@@ -69,7 +69,7 @@ export class SignozApi {
       // Format response
       return ResponseFormatter.formatMetricsResponse(
         response, 
-        params.query, 
+        params.metric.join(', '), 
         request.start, 
         request.end, 
         params.step || "1m"

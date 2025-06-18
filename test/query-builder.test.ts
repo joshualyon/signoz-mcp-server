@@ -99,20 +99,30 @@ describe('QueryBuilder', () => {
   });
 
   describe('buildMetricsQuery', () => {
-    it('should build metrics query with nanosecond timestamps', () => {
+    it('should build metrics query with composite query structure', () => {
       const result = QueryBuilder.buildMetricsQuery({
-        query: 'cpu_usage',
+        metric: ['k8s_pod_cpu_utilization'],
+        query: 'k8s_deployment_name=stio-api',
+        aggregation: 'avg',
         start: 'now-1h',
         end: 'now',
         step: '5m'
       });
 
-      expect(result).toHaveProperty('query', 'cpu_usage');
+      expect(result).toHaveProperty('compositeQuery');
+      expect(result.compositeQuery).toHaveProperty('queryType', 'builder');
+      expect(result.compositeQuery).toHaveProperty('panelType', 'graph');
+      expect(result.compositeQuery.builderQueries).toHaveProperty('A');
       expect(result).toHaveProperty('step', 300); // 5 minutes in seconds
       
-      // Should be in nanoseconds for metrics
-      expect(result.start).toBeGreaterThan(1e15);
-      expect(result.end).toBeGreaterThan(1e15);
+      // Should be in milliseconds for metrics API v4
+      expect(result.start).toBeGreaterThan(1e12);
+      expect(result.end).toBeGreaterThan(1e12);
+      
+      const queryA = result.compositeQuery.builderQueries['A'];
+      expect(queryA.aggregateAttribute.key).toBe('k8s_pod_cpu_utilization');
+      expect(queryA.dataSource).toBe('metrics');
+      expect(queryA.aggregateOperator).toBe('avg');
     });
   });
 

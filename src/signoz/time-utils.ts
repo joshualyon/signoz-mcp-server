@@ -16,9 +16,14 @@ export class TimeUtils {
    * - ISO timestamps
    * - Unix timestamps
    */
-  static parseTimeParam(time?: string): number {
+  static parseTimeParam(time?: string | number): number {
     if (!time) {
       return Date.now();
+    }
+    
+    // Handle numeric input (assumed to be milliseconds timestamp)
+    if (typeof time === 'number') {
+      return time;
     }
     
     // Strip "now-" prefix for backward compatibility, then handle as simple relative time
@@ -38,7 +43,12 @@ export class TimeUtils {
       }
     }
     
-    // Handle ISO date or Unix timestamp
+    // Handle pure numeric strings as millisecond timestamps
+    if (/^\d+$/.test(time)) {
+      return parseInt(time);
+    }
+    
+    // Handle ISO date or other date formats
     const parsed = Date.parse(time);
     return isNaN(parsed) ? Date.now() : parsed;
   }

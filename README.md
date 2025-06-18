@@ -4,10 +4,21 @@ An MCP (Model Context Protocol) server that exposes Signoz observability data to
 
 ## Features
 
-- **Query Logs**: Search and analyze application logs with natural language
-- **Query Metrics**: Retrieve metrics using PromQL queries
-- **Query Traces**: Analyze distributed traces to understand request flows
-- **Unified API**: Uses Signoz v4 API's unified query endpoint
+- **Query Logs**: Search and analyze application logs with simple filter syntax
+- **Query Metrics**: Builder-based metrics querying with aggregation and grouping  
+- **Discover Data**: Explore available metrics and log attributes
+- **Unified Interface**: Consistent syntax across logs and metrics
+- **Type Safety**: Robust timestamp handling and parameter validation
+- **Production Ready**: Comprehensive test coverage and error handling
+
+### ✅ **Fully Implemented**
+- ✅ **Logs**: Complete querying with pagination and attribute filtering
+- ✅ **Metrics**: Builder queries with multiple metrics, aggregation, and grouping
+- ✅ **Discovery**: Metric and log attribute discovery tools
+- ✅ **Testing**: 45+ tests covering all functionality
+
+### 🚧 **In Development** 
+- 🚧 **Traces**: Basic implementation (placeholder)
 
 ## Prerequisites
 

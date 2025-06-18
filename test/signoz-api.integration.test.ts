@@ -44,7 +44,8 @@ describe('SignozApi Integration Tests', () => {
 
       // Should contain basic info
       expect(result).toContain('Found');
-      expect(result).toContain('[INFO]') || expect(result).toContain('[ERROR]') || expect(result).toContain('[WARN]');
+      // Should contain at least one log level
+      expect(result).toMatch(/\[(INFO|ERROR|WARN)\]/);
 
       // Should NOT contain noisy attributes in compact mode
       expect(result).not.toContain('log.file.path');
@@ -69,7 +70,7 @@ describe('SignozApi Integration Tests', () => {
       expect(result).toContain('Found');
       
       // Should contain verbose attributes
-      expect(result).toContain('log.file.path') || expect(result).toContain('k8s.node.uid');
+      expect(result).toMatch(/log\.file\.path|k8s\.node\.uid/);
     });
 
     it.skipIf(shouldSkipIntegrationTests)('should respect explicit exclude_attributes', async () => {
