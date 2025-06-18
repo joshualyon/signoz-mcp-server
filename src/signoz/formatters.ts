@@ -243,13 +243,14 @@ Run discover_metrics to see available metrics.`;
       
       if (metadata.type === 'Histogram') {
         formattedText += `**Histogram metrics:**\n`;
-        formattedText += `• metric: ["${metricName}"], aggregation: "p95" - 95th percentile\n`;
-        formattedText += `• metric: ["${metricName}"], aggregation: "p50" - 50th percentile\n\n`;
+        formattedText += `• metric: ["${metricName}"], aggregation: "avg" - Average values\n`;
+        formattedText += `• metric: ["${metricName}"], aggregation: "max" - Maximum values\n\n`;
       }
       
       formattedText += `**Common aggregations:**\n`;
-      formattedText += `• metric: ["${metricName}"], aggregation: "rate1m" - Rate over 1 minute\n`;
-      formattedText += `• metric: ["${metricName}"], aggregation: "increase5m" - Increase over 5 minutes\n`;
+      formattedText += `• metric: ["${metricName}"], aggregation: "avg" - Average over time\n`;
+      formattedText += `• metric: ["${metricName}"], aggregation: "sum" - Total/cumulative values\n`;
+      formattedText += `• metric: ["${metricName}"], aggregation: "max" - Peak values\n`;
       if (firstAttr) {
         formattedText += `• metric: ["${metricName}"], group_by: ["${firstAttr.key}"], aggregation: "sum"\n`;
       }
@@ -257,9 +258,9 @@ Run discover_metrics to see available metrics.`;
       formattedText += `## 🏷️ Labels (Attributes)\n\nNo attribute information available for this metric.\n\n`;
       formattedText += `## 🔍 Basic Queries\n\n`;
       formattedText += `• metric: ["${metadata.name}"]\n`;
-      formattedText += `• metric: ["${metadata.name}"], aggregation: "rate1m"\n`;
+      formattedText += `• metric: ["${metadata.name}"], aggregation: "avg"\n`;
       if (metadata.type === 'Histogram') {
-        formattedText += `• metric: ["${metadata.name}"], aggregation: "p95"\n`;
+        formattedText += `• metric: ["${metadata.name}"], aggregation: "max"\n`;
       }
     }
 
