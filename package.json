@@ -4,7 +4,7 @@
   "description": "MCP server for exposing Signoz observability data to Claude",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/signoz-mcp-server.git"
+    "url": "https://github.com/joshualyon/signoz-mcp-server.git"
   },
   "main": "src/server.ts",
   "module": "src/server.ts",
