@@ -156,8 +156,11 @@ async function buildTargets(targets: BuildTarget[]): Promise<void> {
       console.log(`\n🎉 All ${targetCount} builds completed successfully!`);
     }
     
+    // Preconfiguring the release config with semantic-release for now
+    //   so we can put the build.ts execution conditionally in semantic-release
+    //   and not have to run for non-release commits (eg. docs, chores, etc.)
     // Update release config if in CI and all builds succeeded
-    await updateReleaseConfig();
+    // await updateReleaseConfig();
   }
 }
 

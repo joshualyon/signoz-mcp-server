@@ -22,12 +22,34 @@
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
+    
+    ["@semantic-release/exec", {
+      "prepareCmd": "bun run build:binary:all"
+    }],
+
     [
       "@semantic-release/github",
       {
         "assets": [
           {
-            "path": "bin/*"
+            "path": "bin/signoz-mcp-darwin-arm64",
+            "label": "macOS ARM64 (M1/M2)"
+          },
+          {
+            "path": "bin/signoz-mcp-darwin-x64",
+            "label": "macOS Intel"
+          },
+          {
+            "path": "bin/signoz-mcp-linux-x64",
+            "label": "Linux x64"
+          },
+          {
+            "path": "bin/signoz-mcp-linux-arm64",
+            "label": "Linux ARM64"
+          },
+          {
+            "path": "bin/signoz-mcp-windows-x64.exe",
+            "label": "Windows x64"
           }
         ],
         "releaseNameTemplate": "v${nextRelease.version}",

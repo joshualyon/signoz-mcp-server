@@ -64,13 +64,13 @@ git push origin main v1.0.1
 
 ### Unified Build Script
 
-The project uses a unified build script (`scripts/build.ts`) that handles all build scenarios:
+The project uses a unified build script (`scripts/build.ts`) that handles all build scenarios and produced binary executables that can be run directly on various architectures without any other dependencies:
 
 ```bash
 # Package.json scripts
 bun run build              # Build for current platform only
 bun run build:binary       # Same as above
-bun run build:binary:all   # Build for all platforms
+bun run build:binary:all   # Build for all platform architectures
 
 # Direct script usage
 bun scripts/build.ts --help                # Show help and available targets
