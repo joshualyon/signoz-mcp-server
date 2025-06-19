@@ -31,7 +31,7 @@ export const SeriesSchema = z.object({
 
 // Row schema - for list data
 export const RowSchema = z.object({
-  timestamp: z.string(),
+  timestamp: z.union([z.string(), z.number()]), // API may return string or numeric timestamps
   data: z.record(z.any()),
 });
 
@@ -101,7 +101,7 @@ export const MetricsResponseSchema = z.object({
 
 // Logs Response (typically with panelType: 'list')
 export const LogEntrySchema = z.object({
-  timestamp: z.string(),
+  timestamp: z.union([z.string(), z.number()]), // API may return string or numeric timestamps
   data: z.object({
     body: z.string(),
     attributes_string: z.record(z.string()).optional(),

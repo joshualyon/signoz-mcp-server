@@ -213,7 +213,7 @@ export class ResponseFormatter {
       
       // Add data rows
       sortedTimestamps.forEach(timestamp => {
-        const values = seriesData.values.get(timestamp) || new Array(metricNames.length).fill('');
+        const values = seriesData?.values.get(timestamp) || new Array(metricNames.length).fill('');
         formattedText += `|${timestamp}|${values.join('|')}|\n`;
       });
     }
@@ -406,7 +406,7 @@ Run discover_metrics to see available metrics.`;
    * Format compact log entry (default mode) - minimal output
    */
   private static formatCompactLog(entry: LogEntry, options: FormattingOptions): string {
-    const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
+    const timestamp = TimeUtils.formatTimestamp(entry.timestamp);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
     const serviceContext = this.buildServiceContext(entry.data);
@@ -436,7 +436,7 @@ Run discover_metrics to see available metrics.`;
    * Format verbose log entry (all attributes)
    */
   private static formatVerboseLog(entry: LogEntry): string {
-    const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
+    const timestamp = TimeUtils.formatTimestamp(entry.timestamp);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
     const serviceContext = this.buildServiceContext(entry.data);

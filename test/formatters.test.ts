@@ -3,7 +3,7 @@ import { ResponseFormatter } from '../src/signoz/formatters.js';
 
 describe('ResponseFormatter', () => {
   const mockLogEntry = {
-    timestamp: 1705314600000000000, // Nanoseconds
+    timestamp: 1705314600000000000, // Nanoseconds - valid format
     data: {
       body: 'Test log message',
       attributes_string: {

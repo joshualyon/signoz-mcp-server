@@ -6,11 +6,12 @@ describe('Offset Pagination Tests', () => {
     it('should show correct pagination ranges with offset', () => {
       const metrics = new Array(10).fill(null).map((_, i) => ({
         metric_name: `metric_${i}`,
-        type: 'Gauge',
+        type: 'Gauge' as const,
         unit: '',
         samples: 1000,
         timeseries: 5,
-        description: `Description ${i}`
+        description: `Description ${i}`,
+        lastReceived: Date.now() - i * 1000
       }));
 
       // Test with offset 0 (first page)
@@ -32,11 +33,12 @@ describe('Offset Pagination Tests', () => {
     it('should handle pagination when no total is available', () => {
       const metrics = new Array(5).fill(null).map((_, i) => ({
         metric_name: `metric_${i}`,
-        type: 'Gauge',
+        type: 'Gauge' as const,
         unit: '',
         samples: 1000,
         timeseries: 5,
-        description: `Description ${i}`
+        description: `Description ${i}`,
+        lastReceived: Date.now() - i * 1000
       }));
 
       const result = ResponseFormatter.formatMetricsList(metrics, 5, undefined, 20);
@@ -47,11 +49,12 @@ describe('Offset Pagination Tests', () => {
     it('should work without offset parameter (backward compatibility)', () => {
       const metrics = [{
         metric_name: 'test_metric',
-        type: 'Counter',
+        type: 'Sum' as const,
         unit: '',
         samples: 1000,
         timeseries: 5,
-        description: 'Test metric'
+        description: 'Test metric',
+        lastReceived: Date.now()
       }];
 
       const result = ResponseFormatter.formatMetricsList(metrics, 10, 50);

@@ -43,7 +43,8 @@ export class SignozApi {
       
       // Format response
       const logs = response.data?.result?.[0]?.list || [];
-      return ResponseFormatter.formatLogEntries(logs, {
+      // Type assertion: API returns logs matching LogEntry schema
+      return ResponseFormatter.formatLogEntries(logs as LogEntry[], {
         verbose: params.verbose,
         include_attributes: params.include_attributes,
         exclude_attributes: params.exclude_attributes,
@@ -175,7 +176,8 @@ Use discover_metrics to see available metrics.`;
       const response = await this.client.queryRange(request);
       const logs = response.data?.result?.[0]?.list || [];
       
-      return this.formatDiscoveryResults(logs, request.start, request.end);
+      // Type assertion: API returns logs matching LogEntry schema
+      return this.formatDiscoveryResults(logs as LogEntry[], request.start, request.end);
     } catch (error) {
       let errorMessage = `Error discovering attributes: ${error instanceof Error ? error.message : String(error)}`;
       
@@ -236,7 +238,7 @@ Use discover_metrics to see available metrics.`;
       // Add helpful context for common errors
       if (error instanceof Error && (error.message.includes('404') || error.message.includes('Not Found'))) {
         errorMessage += `\n\nThe metrics discovery endpoint may not be available in this SigNoz version.`;
-      } else if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+      } else if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('ETIMEDOUT'))) {
         errorMessage += `\n\nTip: Try reducing the time range or limit:
 - time_range: "30m"
 - limit: 20`;

@@ -18,14 +18,14 @@ describe('Metrics Builder Query Tests', () => {
       expect(result.compositeQuery.queryType).toBe('builder');
       expect(result.compositeQuery.panelType).toBe('graph');
       expect(result.compositeQuery.builderQueries).toBeDefined();
-      expect(result.compositeQuery.builderQueries['A']).toBeDefined();
+      expect(result.compositeQuery.builderQueries?.['A']).toBeDefined();
       
-      const queryA = result.compositeQuery.builderQueries['A'];
-      expect(queryA.dataSource).toBe('metrics');
-      expect(queryA.aggregateAttribute.key).toBe('k8s_pod_cpu_utilization');
-      expect(queryA.aggregateOperator).toBe('avg');
-      expect(queryA.filters.items).toHaveLength(0);
-      expect(queryA.groupBy).toHaveLength(0);
+      const queryA = result.compositeQuery.builderQueries?.['A'];
+      expect(queryA?.dataSource).toBe('metrics');
+      expect(queryA?.aggregateAttribute?.key).toBe('k8s_pod_cpu_utilization');
+      expect(queryA?.aggregateOperator).toBe('avg');
+      expect(queryA?.filters?.items).toHaveLength(0);
+      expect(queryA?.groupBy).toHaveLength(0);
     });
 
     it('should build query with filters', () => {
@@ -37,15 +37,15 @@ describe('Metrics Builder Query Tests', () => {
       };
 
       const result = QueryBuilder.buildMetricsQuery(params);
-      const queryA = result.compositeQuery.builderQueries['A'];
+      const queryA = result.compositeQuery.builderQueries?.['A'];
       
-      expect(queryA.aggregateOperator).toBe('max');
-      expect(queryA.filters.items).toHaveLength(2);
-      expect(queryA.filters.items[0].key.key).toBe('k8s_deployment_name');
-      expect(queryA.filters.items[0].op).toBe('=');
-      expect(queryA.filters.items[0].value).toBe('stio-api');
-      expect(queryA.filters.items[1].key.key).toBe('k8s_namespace_name');
-      expect(queryA.filters.items[1].value).toBe('default');
+      expect(queryA?.aggregateOperator).toBe('max');
+      expect(queryA?.filters?.items).toHaveLength(2);
+      expect(queryA?.filters?.items?.[0]?.key.key).toBe('k8s_deployment_name');
+      expect(queryA?.filters?.items?.[0]?.op).toBe('=');
+      expect(queryA?.filters?.items?.[0]?.value).toBe('stio-api');
+      expect(queryA?.filters?.items?.[1]?.key.key).toBe('k8s_namespace_name');
+      expect(queryA?.filters?.items?.[1]?.value).toBe('default');
     });
 
     it('should build query with group by', () => {
@@ -56,11 +56,11 @@ describe('Metrics Builder Query Tests', () => {
       };
 
       const result = QueryBuilder.buildMetricsQuery(params);
-      const queryA = result.compositeQuery.builderQueries['A'];
+      const queryA = result.compositeQuery.builderQueries?.['A'];
       
-      expect(queryA.groupBy).toHaveLength(2);
-      expect(queryA.groupBy[0].key).toBe('k8s_pod_name');
-      expect(queryA.groupBy[1].key).toBe('k8s_namespace_name');
+      expect(queryA?.groupBy).toHaveLength(2);
+      expect(queryA?.groupBy?.[0]?.key).toBe('k8s_pod_name');
+      expect(queryA?.groupBy?.[1]?.key).toBe('k8s_namespace_name');
     });
   });
 
@@ -74,24 +74,24 @@ describe('Metrics Builder Query Tests', () => {
 
       const result = QueryBuilder.buildMetricsQuery(params);
       
-      expect(result.compositeQuery.builderQueries['A']).toBeDefined();
-      expect(result.compositeQuery.builderQueries['B']).toBeDefined();
+      expect(result.compositeQuery.builderQueries?.['A']).toBeDefined();
+      expect(result.compositeQuery.builderQueries?.['B']).toBeDefined();
       
-      const queryA = result.compositeQuery.builderQueries['A'];
-      const queryB = result.compositeQuery.builderQueries['B'];
+      const queryA = result.compositeQuery.builderQueries?.['A'];
+      const queryB = result.compositeQuery.builderQueries?.['B'];
       
-      expect(queryA.aggregateAttribute.key).toBe('k8s_pod_cpu_utilization');
-      expect(queryB.aggregateAttribute.key).toBe('k8s_pod_memory_usage');
+      expect(queryA?.aggregateAttribute?.key).toBe('k8s_pod_cpu_utilization');
+      expect(queryB?.aggregateAttribute?.key).toBe('k8s_pod_memory_usage');
       
       // Both should have the same filters
-      expect(queryA.filters.items).toHaveLength(1);
-      expect(queryB.filters.items).toHaveLength(1);
-      expect(queryA.filters.items[0].key.key).toBe('k8s_deployment_name');
-      expect(queryB.filters.items[0].key.key).toBe('k8s_deployment_name');
+      expect(queryA?.filters?.items).toHaveLength(1);
+      expect(queryB?.filters?.items).toHaveLength(1);
+      expect(queryA?.filters?.items?.[0]?.key.key).toBe('k8s_deployment_name');
+      expect(queryB?.filters?.items?.[0]?.key.key).toBe('k8s_deployment_name');
       
       // Multiple metrics should have legends
-      expect(queryA.legend).toBe('k8s_pod_cpu_utilization');
-      expect(queryB.legend).toBe('k8s_pod_memory_usage');
+      expect(queryA?.legend).toBe('k8s_pod_cpu_utilization');
+      expect(queryB?.legend).toBe('k8s_pod_memory_usage');
     });
   });
 
@@ -104,12 +104,12 @@ describe('Metrics Builder Query Tests', () => {
       };
 
       const result = QueryBuilder.buildMetricsQuery(params);
-      const queryA = result.compositeQuery.builderQueries['A'];
+      const queryA = result.compositeQuery.builderQueries?.['A'];
       
-      expect(queryA.filters.items).toHaveLength(3);
-      expect(queryA.filters.items[0].op).toBe('=');
-      expect(queryA.filters.items[1].op).toBe('!=');
-      expect(queryA.filters.items[2].op).toBe('contains');
+      expect(queryA?.filters?.items).toHaveLength(3);
+      expect(queryA?.filters?.items?.[0]?.op).toBe('=');
+      expect(queryA?.filters?.items?.[1]?.op).toBe('!=');
+      expect(queryA?.filters?.items?.[2]?.op).toBe('contains');
     });
   });
 });

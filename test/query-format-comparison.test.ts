@@ -64,8 +64,8 @@ describe('Query Format Comparison', () => {
     // Specific checks
     expect(request.variables).toEqual({});
     expect(request.dataSource).toBe('metrics');
-    expect(request.compositeQuery.builderQueries.A.dataSource).toBe('metrics');
-    expect(request.compositeQuery.builderQueries.A.stepInterval).toBe(60);
+    expect(request.compositeQuery.builderQueries?.A?.dataSource).toBe('metrics');
+    expect(request.compositeQuery.builderQueries?.A?.stepInterval).toBe(60);
   });
 
   it('should match SigNoz UI field ordering and structure', () => {
@@ -89,9 +89,9 @@ describe('Query Format Comparison', () => {
     expect(cq).toHaveProperty('builderQueries');
 
     // Check builder query A structure
-    const queryA = cq.builderQueries.A;
-    expect(queryA.dataSource).toBe('metrics');
-    expect(queryA.aggregateAttribute.key).toBe('k8s_container_cpu_request_utilization');
-    expect(queryA.filters).toEqual({ items: [], op: "AND" });
+    const queryA = cq.builderQueries?.A;
+    expect(queryA?.dataSource).toBe('metrics');
+    expect(queryA?.aggregateAttribute?.key).toBe('k8s_container_cpu_request_utilization');
+    expect(queryA?.filters).toEqual({ items: [], op: "AND" });
   });
 });

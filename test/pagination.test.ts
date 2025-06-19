@@ -70,13 +70,14 @@ describe('Pagination', () => {
     it('should handle entries without timestamps', () => {
       const badEntries = [
         {
-          // Missing timestamp
+          // Missing timestamp property for testing edge case
+          timestamp: undefined as any, // Intentionally undefined
           data: {
             body: 'Entry without timestamp',
             attributes_string: { level: 'info' },
             resources_string: { 'service.name': 'test-service' }
           }
-        }
+        } as any
       ];
 
       const result = ResponseFormatter.formatLogEntries(badEntries, { limit: 1 });

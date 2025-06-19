@@ -14,15 +14,16 @@ describe('QueryBuilder', () => {
       expect(result).toHaveProperty('step', 60);
       expect(result).toHaveProperty('compositeQuery');
       
-      const builderQuery = result.compositeQuery.builderQueries.A;
-      expect(builderQuery.dataSource).toBe('logs');
-      expect(builderQuery.limit).toBe(50);
-      expect(builderQuery.filters.items).toHaveLength(1);
+      const builderQuery = result.compositeQuery.builderQueries?.A;
+      expect(builderQuery).toBeDefined();
+      expect(builderQuery!.dataSource).toBe('logs');
+      expect(builderQuery!.limit).toBe(50);
+      expect(builderQuery?.filters?.items).toHaveLength(1);
       
-      const filter = builderQuery.filters.items[0];
-      expect(filter.key.key).toBe('level');
-      expect(filter.op).toBe('in');
-      expect(filter.value).toBe('error');
+      const filter = builderQuery?.filters?.items?.[0];
+      expect(filter?.key.key).toBe('level');
+      expect(filter?.op).toBe('in');
+      expect(filter?.value).toBe('error');
     });
 
     it('should parse multiple filters with AND', () => {
@@ -30,15 +31,15 @@ describe('QueryBuilder', () => {
         query: 'level=error AND k8s.deployment.name=test-api'
       });
 
-      const filters = result.compositeQuery.builderQueries.A.filters.items;
+      const filters = result.compositeQuery.builderQueries?.A?.filters?.items;
       expect(filters).toHaveLength(2);
       
-      expect(filters[0].key.key).toBe('level');
-      expect(filters[0].value).toBe('error');
+      expect(filters?.[0]?.key.key).toBe('level');
+      expect(filters?.[0]?.value).toBe('error');
       
-      expect(filters[1].key.key).toBe('k8s.deployment.name');
-      expect(filters[1].value).toBe('test-api');
-      expect(filters[1].key.type).toBe('resource'); // k8s attributes should be resource type
+      expect(filters?.[1]?.key.key).toBe('k8s.deployment.name');
+      expect(filters?.[1]?.value).toBe('test-api');
+      expect(filters?.[1]?.key.type).toBe('resource'); // k8s attributes should be resource type
     });
 
     it('should parse different operators', () => {
@@ -46,12 +47,12 @@ describe('QueryBuilder', () => {
         query: 'level!=debug AND body~timeout AND count>10'
       });
 
-      const filters = result.compositeQuery.builderQueries.A.filters.items;
+      const filters = result.compositeQuery.builderQueries?.A?.filters?.items;
       expect(filters).toHaveLength(3);
       
-      expect(filters[0].op).toBe('nin'); // != becomes nin
-      expect(filters[1].op).toBe('contains'); // ~ becomes contains  
-      expect(filters[2].op).toBe('>'); // > stays >
+      expect(filters?.[0]?.op).toBe('nin'); // != becomes nin
+      expect(filters?.[1]?.op).toBe('contains'); // ~ becomes contains  
+      expect(filters?.[2]?.op).toBe('>'); // > stays >
     });
 
     it('should determine correct attribute types', () => {
@@ -59,22 +60,22 @@ describe('QueryBuilder', () => {
         query: 'k8s.pod.name=test AND service=api AND body~error AND level=info'
       });
 
-      const filters = result.compositeQuery.builderQueries.A.filters.items;
+      const filters = result.compositeQuery.builderQueries?.A?.filters?.items;
       
       // k8s attributes should be resource type
-      const k8sFilter = filters.find((f: any) => f.key.key === 'k8s.pod.name');
+      const k8sFilter = filters?.find((f: any) => f.key.key === 'k8s.pod.name');
       expect(k8sFilter?.key.type).toBe('resource');
       
       // service should be resource type
-      const serviceFilter = filters.find((f: any) => f.key.key === 'service');
+      const serviceFilter = filters?.find((f: any) => f.key.key === 'service');
       expect(serviceFilter?.key.type).toBe('resource');
       
       // body and level should be tag type
-      const bodyFilter = filters.find((f: any) => f.key.key === 'body');
+      const bodyFilter = filters?.find((f: any) => f.key.key === 'body');
       expect(bodyFilter?.key.type).toBe('tag');
       expect(bodyFilter?.key.isColumn).toBe(true);
       
-      const levelFilter = filters.find((f: any) => f.key.key === 'level');
+      const levelFilter = filters?.find((f: any) => f.key.key === 'level');
       expect(levelFilter?.key.type).toBe('tag');
     });
 
@@ -83,9 +84,9 @@ describe('QueryBuilder', () => {
         query: 'body~"connection failed" AND service="my-api"'
       });
 
-      const filters = result.compositeQuery.builderQueries.A.filters.items;
-      expect(filters[0].value).toBe('connection failed');
-      expect(filters[1].value).toBe('my-api');
+      const filters = result.compositeQuery.builderQueries?.A?.filters?.items;
+      expect(filters?.[0]?.value).toBe('connection failed');
+      expect(filters?.[1]?.value).toBe('my-api');
     });
 
     it('should use default time range when not specified', () => {
@@ -119,10 +120,10 @@ describe('QueryBuilder', () => {
       expect(result.start).toBeGreaterThan(1e12);
       expect(result.end).toBeGreaterThan(1e12);
       
-      const queryA = result.compositeQuery.builderQueries['A'];
-      expect(queryA.aggregateAttribute.key).toBe('k8s_pod_cpu_utilization');
-      expect(queryA.dataSource).toBe('metrics');
-      expect(queryA.aggregateOperator).toBe('avg');
+      const queryA = result.compositeQuery.builderQueries?.['A'];
+      expect(queryA?.aggregateAttribute?.key).toBe('k8s_pod_cpu_utilization');
+      expect(queryA?.dataSource).toBe('metrics');
+      expect(queryA?.aggregateOperator).toBe('avg');
     });
   });
 

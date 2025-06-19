@@ -34,3 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time range validation in query_metrics and query_logs - now catches backwards time ranges with helpful error messages
 - Empty data series handling in metrics responses - provides clear diagnostics when queries return no data
 - Timestamp unit validation warnings for potential seconds vs milliseconds confusion
+- TypeScript compilation errors in production and test files - fixed type mismatches and added proper optional chaining
+- LogEntry schema to accept both string and numeric timestamps matching actual API behavior
+- Test data to include all required properties (lastReceived, proper type literals)
