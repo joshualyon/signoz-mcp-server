@@ -43,7 +43,7 @@ const ALL_TARGETS: BuildTarget[] = [
   {
     name: "windows-x64",
     target: "bun-windows-x64", 
-    outfile: "bin/signoz-mcp-windows-x64",
+    outfile: "bin/signoz-mcp-windows-x64.exe",
     description: "Windows x64"
   }
 ];
@@ -155,6 +155,53 @@ async function buildTargets(targets: BuildTarget[]): Promise<void> {
     } else {
       console.log(`\n🎉 All ${targetCount} builds completed successfully!`);
     }
+    
+    // Update release config if in CI and all builds succeeded
+    await updateReleaseConfig();
+  }
+}
+
+/**
+ * Update .releaserc.json with specific asset paths and labels when running in CI
+ */
+async function updateReleaseConfig(): Promise<void> {
+  if (!process.env.CI && !process.env.GITHUB_ACTIONS) {
+    return; // Only run in CI environment
+  }
+
+  console.log("\n📝 Updating .releaserc.json with asset labels for CI...");
+  
+  try {
+    const configPath = ".releaserc.json";
+    const configFile = Bun.file(configPath);
+    const config = await configFile.json();
+    
+    // Find the @semantic-release/github plugin configuration
+    const githubPlugin = config.plugins.find((plugin: any) => {
+      if (Array.isArray(plugin) && plugin[0] === "@semantic-release/github") {
+        return true;
+      }
+      return false;
+    });
+    
+    if (!githubPlugin || !Array.isArray(githubPlugin)) {
+      console.log("⚠️  Could not find @semantic-release/github plugin configuration");
+      return;
+    }
+    
+    // Update the assets with specific paths and friendly labels
+    githubPlugin[1].assets = ALL_TARGETS.map(target => ({
+      path: target.outfile,
+      label: target.description
+    }));
+    
+    // Write the updated config back
+    await Bun.write(configPath, JSON.stringify(config, null, 2));
+    console.log("✅ Updated .releaserc.json with specific asset labels");
+    
+  } catch (error) {
+    console.error("❌ Failed to update .releaserc.json:", error);
+    // Don't fail the build if this fails
   }
 }
 

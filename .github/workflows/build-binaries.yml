@@ -1,8 +1,10 @@
 name: Build Cross-Platform Binaries
 
 on:
-  push:
-    tags: ["v*"]
+  # The build is integrated into the release.yml workflow now
+  #    but we'll leave the manual trigger for testing for now
+  # push:
+  #   tags: ["v*"]
   workflow_dispatch:
 
 jobs:

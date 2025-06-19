@@ -43,6 +43,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Build all platform binaries
+        run: bun scripts/build.ts
+
       - name: Run semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
