@@ -3,11 +3,16 @@
 import type { 
   LogQueryParams, 
   MetricsQueryParams, 
-  TracesQueryParams, 
-  QueryRangeRequest, 
-  Filter, 
-  CompositeQuery 
+  TracesQueryParams,
+  FormattingOptions,
 } from './types.js';
+import type {
+  QueryRangeRequest,
+  MetricsQueryRequest,
+  LogsQueryRequest,
+  FilterItemSchema,
+} from './schemas.js';
+import { z } from 'zod';
 import { TimeUtils } from './time-utils.js';
 
 export class QueryBuilder {
@@ -18,6 +23,9 @@ export class QueryBuilder {
     const startTime = TimeUtils.parseTimeParam(params.start || "now-1h");
     const endTime = TimeUtils.parseTimeParam(params.end || "now");
     
+    // Validate time range
+    TimeUtils.validateTimeRange(params.start || "now-1h", params.end || "now");
+    
     // Build composite query structure
     const compositeQuery = this.buildLogsCompositeQuery(params.query || "", params.limit || 100);
     
@@ -25,8 +33,10 @@ export class QueryBuilder {
       start: startTime,
       end: endTime,
       step: 60, // 60 second step
-      ...compositeQuery
-    };
+      compositeQuery: compositeQuery,
+      variables: {},
+      dataSource: "logs"
+    } as LogsQueryRequest;
   }
 
   /**
@@ -37,8 +47,11 @@ export class QueryBuilder {
     const endTime = TimeUtils.parseTimeParam(params.end || "now");
     const step = TimeUtils.parseStepParam(params.step || "1m");
     
+    // Validate time range
+    TimeUtils.validateTimeRange(params.start || "now-1h", params.end || "now");
+    
     // Build filters from query string
-    const filters: Filter[] = [];
+    const filters: z.infer<typeof FilterItemSchema>[] = [];
     if (params.query) {
       const filterParts = params.query.split(/\s+AND\s+/i);
       filterParts.forEach((part) => {
@@ -74,28 +87,28 @@ export class QueryBuilder {
     }));
 
     // Build builder queries for each metric
-    const builderQueries: { [key: string]: any } = {};
+    const builderQueries: Record<string, z.infer<typeof import('./schemas.js').BuilderQuerySchema>> = {};
     params.metric.forEach((metricName, index) => {
       const queryName = String.fromCharCode(65 + index); // A, B, C, etc.
       
       builderQueries[queryName] = {
-        queryName: queryName,
         dataSource: "metrics",
+        queryName: queryName,
         aggregateOperator: params.aggregation || "avg",
         aggregateAttribute: {
           key: metricName,
+          dataType: "float64",
           type: "Gauge", // Default type, could be detected from discovery
-          id: `${metricName}--float64--Gauge--true`,
           isColumn: true,
           isJSON: false,
-          dataType: "float64"
+          id: `${metricName}--float64--Gauge--true`
         },
         timeAggregation: params.aggregation || "avg",
         spaceAggregation: params.aggregation || "avg",
         functions: [],
         filters: {
-          op: "AND",
-          items: filters
+          items: filters,
+          op: "AND"
         },
         expression: queryName,
         disabled: false,
@@ -113,13 +126,15 @@ export class QueryBuilder {
       start: startTime, // Already in milliseconds from TimeUtils
       end: endTime,
       step: step,
+      variables: {},
       compositeQuery: {
         queryType: "builder",
         panelType: "graph",
         fillGaps: false,
         builderQueries: builderQueries
-      }
-    };
+      },
+      dataSource: "metrics"
+    } as MetricsQueryRequest;
   }
 
   /**
@@ -132,16 +147,22 @@ export class QueryBuilder {
     return {
       start: startTime,
       end: endTime,
-      query: params.query,
-    };
+      step: 60,
+      query: params.query,  // Keep query property for test compatibility
+      compositeQuery: {
+        queryType: "builder",
+        panelType: "trace",
+        builderQueries: {}
+      }
+    } as QueryRangeRequest & { query: string };
   }
 
   /**
    * Build composite query structure for logs
    * Parse simple filter syntax like "k8s.deployment.name=stio-api AND level=error"
    */
-  private static buildLogsCompositeQuery(filter: string, limit: number = 100): CompositeQuery {
-    const filters: Filter[] = [];
+  private static buildLogsCompositeQuery(filter: string, limit: number = 100): LogsQueryRequest['compositeQuery'] {
+    const filters: z.infer<typeof FilterItemSchema>[] = [];
     
     if (filter) {
       // Simple parser for key=value, key!=value, or key~value (contains) patterns
@@ -170,34 +191,32 @@ export class QueryBuilder {
     }
 
     return {
-      compositeQuery: {
-        queryType: "builder",
-        panelType: "list",
-        builderQueries: {
-          "A": {
-            queryName: "A",
-            dataSource: "logs",
-            aggregateOperator: "noop",
-            aggregateAttribute: {
-              key: "",
-              dataType: "",
-              type: "",
-              isColumn: false,
-              isJSON: false
-            },
-            expression: "A",
-            disabled: false,
-            stepInterval: 60,
-            filters: {
-              op: "AND",
-              items: filters
-            },
-            limit: limit,
-            orderBy: [{
-              columnName: "timestamp",
-              order: "desc"
-            }]
-          }
+      queryType: "builder",
+      panelType: "list",
+      builderQueries: {
+        "A": {
+          queryName: "A",
+          dataSource: "logs",
+          aggregateOperator: "noop",
+          aggregateAttribute: {
+            key: "",
+            dataType: "",
+            type: "",
+            isColumn: false,
+            isJSON: false
+          },
+          expression: "A",
+          disabled: false,
+          stepInterval: 60,
+          filters: {
+            op: "AND",
+            items: filters
+          },
+          limit: limit,
+          orderBy: [{
+            columnName: "timestamp",
+            order: "desc"
+          }]
         }
       }
     };
@@ -217,8 +236,8 @@ export class QueryBuilder {
   /**
    * Parse filters from query string
    */
-  static parseFilters(filterString: string): Filter[] {
-    const filters: Filter[] = [];
+  static parseFilters(filterString: string): z.infer<typeof FilterItemSchema>[] {
+    const filters: z.infer<typeof FilterItemSchema>[] = [];
     
     if (!filterString) return filters;
     

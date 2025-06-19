@@ -27,11 +27,11 @@ describe('Empty Series Test', () => {
     console.log('=== END OUTPUT ===');
 
     // Should still show series header
-    expect(result).toContain('Series 1');
-    expect(result).toContain('Metric labels: {"job":"test-job","instance":"localhost:8080"}');
+    expect(result).toContain('--- Series 1 ---');
+    expect(result).toContain('Labels: {"job":"test-job","instance":"localhost:8080"}');
     
-    // Should show 0 data points
-    expect(result).toContain('Data points: 0');
+    // Should show warning about no data points
+    expect(result).toContain('⚠️  No data points in this series');
     
     // Should not have any data point timestamps (time range header is okay)
     expect(result).not.toMatch(/  \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/); // No indented timestamps
@@ -131,19 +131,19 @@ describe('Empty Series Test', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
 
-    // Should show all three series
-    expect(result).toContain('Series 1');
-    expect(result).toContain('Series 2');
-    expect(result).toContain('Series 3');
+    // Should show all three queries
+    expect(result).toContain('=== Query 1 ===');
+    expect(result).toContain('=== Query 2 ===');
+    expect(result).toContain('=== Query 3 ===');
     
-    // Series 1 should have data
+    // Query 1 should have data
     expect(result).toContain('Data points: 2');
     expect(result).toContain('42.5');
     
-    // Series 2 should show 0 data points
-    expect(result).toContain('Data points: 0');
+    // Query 2 should show no data points warning
+    expect(result).toContain('⚠️  No data points in this series');
     
-    // Series 3 should have 1 data point
+    // Query 3 should have 1 data point
     expect(result).toContain('Data points: 1');
     expect(result).toContain('15.2');
   });

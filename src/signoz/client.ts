@@ -1,6 +1,24 @@
 // HTTP client for SigNoz API communication
 
-import type { SignozConfig, QueryRangeRequest, ConnectionResult } from './types.js';
+import type { SignozConfig, ConnectionResult } from './types.js';
+import { 
+  QueryRangeRequestSchema,
+  MetricsQueryRequestSchema,
+  LogsQueryRequestSchema,
+  QueryRangeResponseSchema,
+  MetricsResponseSchema,
+  LogsResponseSchema,
+  MetricsDiscoveryResponseSchema,
+  MetricMetadataResponseSchema,
+  type QueryRangeRequest,
+  type QueryRangeResponse,
+  type MetricsQueryRequest,
+  type MetricsResponse,
+  type LogsQueryRequest,
+  type LogsResponse,
+  type MetricsDiscoveryResponse,
+  type MetricMetadataResponse,
+} from './schemas.js';
 
 export class SignozClient {
   private config: SignozConfig;
@@ -12,8 +30,46 @@ export class SignozClient {
   /**
    * Execute query_range request against SigNoz API
    */
-  async queryRange(request: QueryRangeRequest): Promise<any> {
-    return this.makeRequest('/api/v4/query_range', request);
+  /**
+   * Query metrics data from SigNoz
+   */
+  async queryMetrics(request: MetricsQueryRequest): Promise<MetricsResponse> {
+    // Validate request
+    const validatedRequest = MetricsQueryRequestSchema.parse(request);
+    
+    // Make request
+    const response = await this.makeRequest('/api/v4/query_range', validatedRequest);
+    
+    // Validate and return typed response
+    return MetricsResponseSchema.parse(response);
+  }
+
+  /**
+   * Query logs data from SigNoz
+   */
+  async queryLogs(request: LogsQueryRequest): Promise<LogsResponse> {
+    // Validate request
+    const validatedRequest = LogsQueryRequestSchema.parse(request);
+    
+    // Make request
+    const response = await this.makeRequest('/api/v4/query_range', validatedRequest);
+    
+    // Validate and return typed response
+    return LogsResponseSchema.parse(response);
+  }
+
+  /**
+   * Generic query_range request (for flexibility)
+   */
+  async queryRange(request: QueryRangeRequest): Promise<QueryRangeResponse> {
+    // Validate request
+    const validatedRequest = QueryRangeRequestSchema.parse(request);
+    
+    // Make request
+    const response = await this.makeRequest('/api/v4/query_range', validatedRequest);
+    
+    // Validate and return typed response
+    return QueryRangeResponseSchema.parse(response);
   }
 
   /**
@@ -52,11 +108,11 @@ export class SignozClient {
           error: `${response.status} ${response.statusText}: ${errorText}`
         };
       }
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         responseTime: 0,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }
@@ -82,7 +138,7 @@ export class SignozClient {
   /**
    * Make HTTP request to metrics discovery endpoints (internal/unofficial)
    */
-  async discoverMetrics(timeRange: string = "1h", limit: number = 50, offset: number = 0): Promise<any> {
+  async discoverMetrics(timeRange: string = "1h", limit: number = 50, offset: number = 0): Promise<MetricsDiscoveryResponse> {
     const url = `${this.config.baseUrl}/api/v1/metrics`;
     const endTime = Date.now();
     const startTime = endTime - (this.parseTimeRange(timeRange) * 1000);
@@ -111,7 +167,10 @@ export class SignozClient {
         throw new Error(`Metrics discovery failed: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Validate response
+      return MetricsDiscoveryResponseSchema.parse(data);
     } catch (error) {
       console.error('Metrics discovery request failed:', error);
       throw error;
@@ -121,7 +180,7 @@ export class SignozClient {
   /**
    * Get detailed metadata for a specific metric (internal/unofficial)
    */
-  async getMetricMetadata(metricName: string): Promise<any> {
+  async getMetricMetadata(metricName: string): Promise<MetricMetadataResponse> {
     const url = `${this.config.baseUrl}/api/v1/metrics/${encodeURIComponent(metricName)}/metadata`;
     
     try {
@@ -139,7 +198,10 @@ export class SignozClient {
         throw new Error(`Metric metadata request failed: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Validate response
+      return MetricMetadataResponseSchema.parse(data);
     } catch (error) {
       console.error('Metric metadata request failed:', error);
       throw error;
@@ -170,12 +232,11 @@ export class SignozClient {
   /**
    * Make HTTP request to SigNoz API
    */
-  private async makeRequest(endpoint: string, data: any): Promise<any> {
+  private async makeRequest(endpoint: string, data: unknown): Promise<unknown> {
     const url = `${this.config.baseUrl}${endpoint}`;
     
     try {
       console.error(`Making request to: ${url}`);
-      console.error(`Headers: SIGNOZ-API-KEY: ${this.config.apiKey.substring(0, 10)}...`);
       
       const response = await fetch(url, {
         method: 'POST',

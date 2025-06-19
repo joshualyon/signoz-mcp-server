@@ -1,31 +1,43 @@
 // SignozApi Type Definitions
 
+// Re-export all types from schemas for convenience
+export type {
+  // Response types
+  QueryRangeResponse,
+  MetricsResponse,
+  LogsResponse,
+  MetricsDiscoveryResponse,
+  MetricMetadataResponse,
+  Result,
+  Series,
+  Point,
+  Row,
+  Table,
+  LogEntry,
+  MetricInfo,
+  MetricMetadata,
+  // Request types
+  QueryRangeRequest,
+  MetricsQueryRequest,
+  LogsQueryRequest,
+  // Tool param types
+  LogQueryParams,
+  MetricsQueryParams,
+  DiscoveryParams,
+  MetricDiscoveryParams,
+  MetricAttributesParams,
+  // Time types
+  TimeParam,
+  // Filter types
+  FilterItem,
+} from './schemas.js';
+
 export interface SignozConfig {
   apiKey: string;
   baseUrl: string;
 }
 
-export interface LogQueryParams {
-  query?: string;
-  start?: string;
-  end?: string;
-  limit?: number;
-  verbose?: boolean;
-  include_attributes?: string[];
-  exclude_attributes?: string[];
-  level?: LogLevel;
-}
-
-export interface MetricsQueryParams {
-  metric: string[];
-  query?: string;
-  aggregation?: string;
-  group_by?: string[];
-  start?: string;
-  end?: string;
-  step?: string;
-}
-
+// TracesQueryParams not yet in schemas.ts
 export interface TracesQueryParams {
   query: string;
   start?: string;
@@ -33,75 +45,7 @@ export interface TracesQueryParams {
   limit?: number;
 }
 
-export interface DiscoveryParams {
-  sample_size?: number;
-  time_range?: string;
-}
-
-export interface MetricDiscoveryParams {
-  time_range?: string;  // "1h", "24h", etc
-  limit?: number;       // Max metrics to return
-  offset?: number;      // Pagination offset
-  filter?: string;      // Filter by metric name pattern
-}
-
-export interface MetricAttributesParams {
-  metric_name: string;
-  time_range?: string;
-  sample_size?: number;
-}
-
-export interface MetricInfo {
-  metric_name: string;
-  description: string;
-  type: 'Sum' | 'Gauge' | 'Histogram' | 'Summary';
-  unit: string;
-  timeseries: number;
-  samples: number;
-  lastReceived: number;
-}
-
-export interface MetricAttribute {
-  key: string;
-  value: string[];
-  valueCount: number;
-}
-
-export interface MetricMetadata {
-  name: string;
-  description: string;
-  type: string;
-  unit: string;
-  samples: number;
-  timeSeriesTotal: number;
-  timeSeriesActive: number;
-  lastReceived: number;
-  attributes: MetricAttribute[];
-  metadata: {
-    metric_type: string;
-    temporality: string;
-    monotonic: boolean;
-  };
-}
-
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
-
-export interface LogEntry {
-  timestamp: string;
-  level: string;
-  service: string;
-  body: string;
-  attributes?: Record<string, string>;
-  resources?: Record<string, string>;
-}
-
-export interface QueryRangeRequest {
-  start: number;
-  end: number;
-  step?: number;
-  compositeQuery?: any;
-  query?: string;
-}
 
 export interface ConnectionResult {
   success: boolean;
@@ -115,96 +59,4 @@ export interface FormattingOptions {
   include_attributes?: string[];
   exclude_attributes?: string[];
   limit?: number;  // For pagination hints
-}
-
-export interface Filter {
-  id: string;
-  key: {
-    key: string;
-    dataType: string;
-    type: string;
-    isColumn: boolean;
-    isJSON: boolean;
-  };
-  op: string;
-  value: string;
-}
-
-export interface CompositeQuery {
-  compositeQuery: {
-    queryType: string;
-    panelType: string;
-    builderQueries: {
-      [key: string]: {
-        queryName: string;
-        dataSource: string;
-        aggregateOperator: string;
-        aggregateAttribute: {
-          key: string;
-          dataType: string;
-          type: string;
-          isColumn: boolean;
-          isJSON: boolean;
-        };
-        expression: string;
-        disabled: boolean;
-        stepInterval: number;
-        filters: {
-          op: string;
-          items: Filter[];
-        };
-        limit: number;
-        orderBy: Array<{
-          columnName: string;
-          order: string;
-        }>;
-      };
-    };
-  };
-}
-
-export interface MetricBuilderQuery {
-  queryName: string;
-  dataSource: string;
-  aggregateOperator: string;
-  aggregateAttribute: {
-    key: string;
-    type: string;
-    id: string;
-    isColumn: boolean;
-    isJSON: boolean;
-    dataType?: string;
-  };
-  timeAggregation: string;
-  spaceAggregation: string;
-  functions: any[];
-  filters: {
-    op: string;
-    items: Filter[];
-  };
-  expression: string;
-  disabled: boolean;
-  stepInterval: number;
-  having: any[];
-  limit: null;
-  orderBy: any[];
-  groupBy: any[];
-  legend: string;
-  reduceTo: string;
-}
-
-export interface MetricsCompositeQuery {
-  start: number;
-  end: number;
-  step: number;
-  variables?: object;
-  compositeQuery: {
-    queryType: string;
-    panelType: string;
-    fillGaps?: boolean;
-    builderQueries: {
-      [key: string]: MetricBuilderQuery;
-    };
-  };
-  dataSource: string;
 }

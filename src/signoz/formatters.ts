@@ -1,6 +1,15 @@
 // Response formatting logic for SigNoz API responses
 
-import type { LogEntry, FormattingOptions } from './types.js';
+import type { FormattingOptions } from './types.js';
+import type { 
+  LogEntry, 
+  MetricsResponse, 
+  LogsResponse,
+  MetricInfo,
+  MetricMetadata,
+  Series,
+  Point,
+} from './schemas.js';
 import { TimeUtils } from './time-utils.js';
 
 export class ResponseFormatter {
@@ -19,14 +28,14 @@ export class ResponseFormatter {
   /**
    * Format log entries for display
    */
-  static formatLogEntries(logs: any[], options: FormattingOptions = {}): string {
+  static formatLogEntries(logs: LogEntry[], options: FormattingOptions = {}): string {
     let formattedText = `Found ${logs.length} log entries\n\n`;
     
     if (logs.length === 0) {
       return formattedText;
     }
 
-    logs.forEach((entry: any) => {
+    logs.forEach((entry: LogEntry) => {
       if (options.verbose) {
         formattedText += this.formatVerboseLog(entry);
       } else {
@@ -51,41 +60,127 @@ export class ResponseFormatter {
   /**
    * Format metrics response for display
    */
-  static formatMetricsResponse(response: any, query: string, startTime: number, endTime: number, step: string): string {
+  static formatMetricsResponse(response: unknown, query: string, startTime: number, endTime: number, step: string): string {
     let formattedText = `Metrics query result\n\n`;
     formattedText += `Query: ${query}\n`;
     formattedText += `Time range: ${this.formatTimestamp(startTime)} to ${this.formatTimestamp(endTime)}\n`;
     formattedText += `Step: ${step}\n\n`;
     
-    if (response.data?.result) {
-      formattedText += `Result type: ${response.data.resultType}\n\n`;
-      response.data.result.forEach((series: any, index: number) => {
-        formattedText += `--- Series ${index + 1} ---\n`;
-        if (series.metric) {
-          formattedText += `Metric labels: ${JSON.stringify(series.metric)}\n`;
+    // Check if we have the expected response structure
+    const data = (response as any)?.data;
+    if (!response || !data || !data.result) {
+      formattedText += `❌ No data returned from query.\n\n`;
+      formattedText += `This could mean:\n`;
+      formattedText += `• The metric doesn't exist - try discover_metrics to see available metrics\n`;
+      formattedText += `• No data exists in the specified time range\n`;
+      formattedText += `• The query filters are too restrictive\n`;
+      formattedText += `• There's an issue with the SigNoz API\n\n`;
+      formattedText += `Debugging suggestions:\n`;
+      formattedText += `• Use discover_metrics to verify metric names\n`;
+      formattedText += `• Try a longer time range (e.g., start="24h", end="now")\n`;
+      formattedText += `• Remove query filters temporarily\n`;
+      formattedText += `• Check if the metric has data in SigNoz UI\n`;
+      return formattedText;
+    }
+
+    // result is an array of query results (one per query like "A", "B", etc)
+    const results = data.result;
+    formattedText += `Result type: ${data.resultType || 'unknown'}\n`;
+    
+    if (!results || results.length === 0) {
+      formattedText += `\n❌ Query executed successfully but returned no results.\n\n`;
+      formattedText += `This means the metric exists but no data matches your filters.\n\n`;
+      formattedText += `Try:\n`;
+      formattedText += `• Expanding the time range\n`;
+      formattedText += `• Removing or adjusting query filters\n`;
+      formattedText += `• Using discover_metric_attributes to see available labels\n`;
+      return formattedText;
+    }
+
+    // Process each query result
+    results.forEach((result: any, index: number) => {
+      const queryName = result.queryName || `${index + 1}`;
+      formattedText += `\n=== Query ${queryName} ===\n`;
+      
+      // Handle both SigNoz format (series array) and Prometheus format (single result with metric/values)
+      let series: any[] = [];
+      
+      if (result.series) {
+        // SigNoz format: result has series array
+        series = result.series;
+      } else if (result.metric && result.values) {
+        // Prometheus format: convert to series format
+        series = [{
+          labels: result.metric,
+          values: result.values.map(([timestamp, value]: [number, string]) => ({
+            timestamp,
+            value
+          }))
+        }];
+      }
+      
+      if (series.length === 0) {
+        formattedText += `❌ No series returned for query ${queryName}.\n`;
+        return;
+      }
+      
+      // Count series with actual data
+      const seriesWithData = series.filter((s: any) => s.values && s.values.length > 0);
+      const emptySeriesCount = series.length - seriesWithData.length;
+      
+      if (seriesWithData.length === 0) {
+        formattedText += `⚠️  Found ${series.length} series but all are empty (no data points).\n\n`;
+        formattedText += `This suggests:\n`;
+        formattedText += `• Data exists but not in the specified time range\n`;
+        formattedText += `• The metric has labels but they don't match your filters\n\n`;
+        formattedText += `Try:\n`;
+        formattedText += `• Use a wider time range (start="24h", end="now")\n`;
+        formattedText += `• Check discover_metric_attributes for available labels\n`;
+        formattedText += `• Remove query filters to see all data\n`;
+      } else {
+        formattedText += `Found ${seriesWithData.length} series with data`;
+        if (emptySeriesCount > 0) {
+          formattedText += ` (${emptySeriesCount} empty series not shown)`;
         }
-        if (series.values) {
-          formattedText += `Data points: ${series.values.length}\n`;
+        formattedText += `\n\n`;
+      }
+
+      // Display each series
+      series.forEach((s: any, index: number) => {
+        // Skip empty series unless there are no series with data
+        if (seriesWithData.length > 0 && (!s.values || s.values.length === 0)) {
+          return;
+        }
+        
+        formattedText += `--- Series ${index + 1} ---\n`;
+        if (s.labels) {
+          formattedText += `Labels: ${JSON.stringify(s.labels)}\n`;
+        }
+        
+        if (s.values && s.values.length > 0) {
+          formattedText += `Data points: ${s.values.length}\n`;
           // Show first few and last few values
-          if (series.values.length > 6) {
+          if (s.values.length > 6) {
             formattedText += `First 3 values:\n`;
-            series.values.slice(0, 3).forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
+            s.values.slice(0, 3).forEach((v: any) => {
+              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
             });
             formattedText += `...\n`;
             formattedText += `Last 3 values:\n`;
-            series.values.slice(-3).forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
+            s.values.slice(-3).forEach((v: any) => {
+              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
             });
           } else {
-            series.values.forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v[0])}: ${v[1]}\n`;
+            s.values.forEach((v: any) => {
+              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
             });
           }
+        } else {
+          formattedText += `⚠️  No data points in this series\n`;
         }
         formattedText += '\n';
       });
-    }
+    });
 
     return formattedText;
   }
@@ -100,7 +195,7 @@ export class ResponseFormatter {
   /**
    * Format metrics list for display
    */
-  static formatMetricsList(metrics: any[], limit?: number, total?: number, offset?: number): string {
+  static formatMetricsList(metrics: MetricInfo[], limit?: number, total?: number, offset?: number): string {
     if (!metrics || metrics.length === 0) {
       return `No metrics found in the specified time range.`;
     }
@@ -128,7 +223,7 @@ export class ResponseFormatter {
     formattedText += `|Metric|Type|Unit|Samples|Series|Description|\n`;
     formattedText += `|------|----|----|----|------|-----------|\n`;
 
-    metrics.forEach((metric: any) => {
+    metrics.forEach((metric) => {
       const name = metric.metric_name || '';
       const type = metric.type || '';
       const unit = metric.unit || '';
@@ -177,7 +272,7 @@ export class ResponseFormatter {
   /**
    * Format metric attributes/metadata for display
    */
-  static formatMetricAttributes(metadata: any): string {
+  static formatMetricAttributes(metadata: MetricMetadata): string {
     if (!metadata) {
       return `Error: Unable to retrieve metric metadata.
 
@@ -196,7 +291,10 @@ The metric may not exist or may not have any associated metadata.
 Run discover_metrics to see available metrics.`;
     }
 
-    let formattedText = `# Metric: ${metadata.name}
+    // Decode URL-encoded metric name
+    const decodedName = decodeURIComponent(metadata.name);
+    
+    let formattedText = `# Metric: ${decodedName}
 
 **Type:** ${metadata.type || 'unknown'} | **Unit:** ${metadata.unit || 'none'}
 **Description:** ${metadata.description || 'No description available'}
@@ -214,7 +312,7 @@ Run discover_metrics to see available metrics.`;
       // Sort attributes by value count (most diverse first)
       const sortedAttrs = [...metadata.attributes].sort((a, b) => (b.valueCount || 0) - (a.valueCount || 0));
       
-      sortedAttrs.forEach((attr: any) => {
+      sortedAttrs.forEach((attr) => {
         formattedText += `**${attr.key}** (${(attr.valueCount || 0).toLocaleString()} unique values)\n`;
         if (attr.value && attr.value.length > 0) {
           const sampleValues = attr.value.slice(0, 5).join(', ');
@@ -271,7 +369,7 @@ Run discover_metrics to see available metrics.`;
   /**
    * Format compact log entry (default mode) - minimal output
    */
-  private static formatCompactLog(entry: any, options: FormattingOptions): string {
+  private static formatCompactLog(entry: LogEntry, options: FormattingOptions): string {
     const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
@@ -301,7 +399,7 @@ Run discover_metrics to see available metrics.`;
   /**
    * Format verbose log entry (all attributes)
    */
-  private static formatVerboseLog(entry: any): string {
+  private static formatVerboseLog(entry: LogEntry): string {
     const timestamp = TimeUtils.formatTimestamp(entry.timestamp || entry.ts || entry.time);
     const body = entry.data?.body || '';
     const level = entry.data?.attributes_string?.level || entry.data?.severity_text || 'INFO';
@@ -331,7 +429,7 @@ Run discover_metrics to see available metrics.`;
   /**
    * Build intelligent service context from available data
    */
-  private static buildServiceContext(data: any): string {
+  private static buildServiceContext(data: LogEntry['data']): string {
     const resources = data?.resources_string || {};
     
     // Try service.name first (explicit service identification)
@@ -365,7 +463,7 @@ Run discover_metrics to see available metrics.`;
   /**
    * Extract the oldest timestamp from log entries for pagination
    */
-  private static extractOldestTimestamp(logs: any[]): string | null {
+  private static extractOldestTimestamp(logs: LogEntry[]): string | null {
     if (logs.length === 0) return null;
 
     // Logs should be sorted newest to oldest, so last entry is oldest

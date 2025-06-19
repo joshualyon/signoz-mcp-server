@@ -82,8 +82,41 @@ export class TimeUtils {
       const endMs = this.parseTimeParam(end);
       
       if (startMs >= endMs) {
-        throw new Error(`Invalid time range: start (${start}) must be before end (${end})`);
+        if (start === end) {
+          throw new Error(`Invalid time range: start and end are the same (${start})`);
+        } else {
+          throw new Error(`Invalid time range: start (${start}) must be before end (${end})`);
+        }
       }
+      
+      // Check for potential unit confusion (seconds vs milliseconds)
+      this.warnAboutTimestampUnits(startMs, endMs, start, end);
+    }
+  }
+  
+  /**
+   * Warn about potential timestamp unit confusion
+   */
+  private static warnAboutTimestampUnits(startMs: number, endMs: number, startStr: string, endStr: string): void {
+    const now = Date.now();
+    const oneYearAgo = now - (365 * 24 * 60 * 60 * 1000);
+    const oneYearFromNow = now + (365 * 24 * 60 * 60 * 1000);
+    
+    // Check if timestamps are suspiciously old (might be Unix seconds instead of milliseconds)
+    if (startMs < oneYearAgo || endMs < oneYearAgo) {
+      // Could be Unix seconds timestamp
+      const startAsSeconds = startMs * 1000;
+      const endAsSeconds = endMs * 1000;
+      
+      if (startAsSeconds > oneYearAgo && startAsSeconds < oneYearFromNow) {
+        console.warn(`⚠️  Warning: Timestamp ${startStr} (${new Date(startMs).toISOString()}) appears to be very old.
+If you meant to use a Unix timestamp in seconds, multiply by 1000 or use a different format.`);
+      }
+    }
+    
+    // Check if timestamps are suspiciously far in the future
+    if (startMs > oneYearFromNow || endMs > oneYearFromNow) {
+      console.warn(`⚠️  Warning: Timestamp appears to be far in the future: ${new Date(Math.max(startMs, endMs)).toISOString()}`);
     }
   }
 

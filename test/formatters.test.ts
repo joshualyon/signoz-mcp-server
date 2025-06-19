@@ -120,14 +120,18 @@ describe('ResponseFormatter', () => {
   describe('formatMetricsResponse', () => {
     it('should format metrics response correctly', () => {
       const mockResponse = {
+        status: 'success',
         data: {
           resultType: 'matrix',
           result: [{
-            metric: { job: 'test-job' },
-            values: [
-              [1705314600000000, '42.5'],
-              [1705314660000000, '43.0']
-            ]
+            queryName: 'A',
+            series: [{
+              labels: { job: 'test-job' },
+              values: [
+                { timestamp: 1705314600000, value: '42.5' },
+                { timestamp: 1705314660000, value: '43.0' }
+              ]
+            }]
           }]
         }
       };
@@ -144,7 +148,7 @@ describe('ResponseFormatter', () => {
       expect(result).toContain('Query: test_metric');
       expect(result).toContain('Step: 1m');
       expect(result).toContain('Result type: matrix');
-      expect(result).toContain('Series 1');
+      expect(result).toContain('--- Series 1 ---');
       expect(result).toContain('job');
       expect(result).toContain('42.5');
     });

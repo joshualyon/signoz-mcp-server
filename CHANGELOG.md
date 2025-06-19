@@ -31,3 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build system reliability and cross-platform compatibility
 - discover_metrics pagination clarity - now shows total count and proper range indicators
 - discover_metric_attributes validation to handle missing/invalid metrics properly
+- Time range validation in query_metrics and query_logs - now catches backwards time ranges with helpful error messages
+- Empty data series handling in metrics responses - provides clear diagnostics when queries return no data
+- Timestamp unit validation warnings for potential seconds vs milliseconds confusion

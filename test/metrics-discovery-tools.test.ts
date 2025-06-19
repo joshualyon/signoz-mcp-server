@@ -27,9 +27,10 @@ describe('Metrics Discovery Tools Tests', () => {
 
       console.log('Result preview:', result.substring(0, 500));
       
-      expect(result).toContain('Metrics Discovery Results');
-      expect(result).toContain('Top Metrics by Activity');
-      expect(result).toContain('Example Queries');
+      // New format is information-dense markdown table
+      expect(result).toContain('|Metric|Type|Unit|Samples|Series|Description|');
+      expect(result).toContain('Example queries:');
+      expect(result).toContain('More metrics available');
       
       // Should not contain internal endpoint warnings
       expect(result).not.toContain('unofficial');

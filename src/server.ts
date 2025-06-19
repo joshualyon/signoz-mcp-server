@@ -125,11 +125,13 @@ class SignozMCPServer {
               },
               start: {
                 type: "string",
-                description: "Start time (ISO 8601, Unix timestamp, or relative like '30m', '1h', 'now-2h')",
+                description: "Start time (ISO 8601, Unix timestamp, or relative like '30m', '1h', 'now-2h'). Defaults to '1h' (1 hour ago) if not specified. Note: '1h' means '1 hour ago', not '1 hour from now'.",
+                default: "1h",
               },
               end: {
-                type: "string",
-                description: "End time (ISO 8601, Unix timestamp, or relative like '30m', '1h')",
+                type: "string", 
+                description: "End time (ISO 8601, Unix timestamp, or relative like '30m', '1h'). Defaults to 'now' if not specified. Must be after start time.",
+                default: "now",
               },
               step: {
                 type: "string",

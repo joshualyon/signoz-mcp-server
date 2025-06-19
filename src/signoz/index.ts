@@ -13,6 +13,7 @@ import type {
   MetricAttributesParams,
   ConnectionResult 
 } from './types.js';
+import type { LogEntry } from './schemas.js';
 
 export class SignozApi {
   private client: SignozClient;
@@ -48,8 +49,20 @@ export class SignozApi {
         exclude_attributes: params.exclude_attributes,
         limit: params.limit
       });
-    } catch (error: any) {
-      return `Error querying logs: ${error.message}`;
+    } catch (error) {
+      let errorMessage = `Error querying logs: ${error instanceof Error ? error.message : String(error)}`;
+      
+      // Provide additional context for time range errors
+      if (error instanceof Error && error.message.includes('Invalid time range')) {
+        errorMessage += `\n\nTime range help:`;
+        errorMessage += `\n• Relative times like "1h" mean "1 hour ago"`;
+        errorMessage += `\n• start="2h", end="1h" = 2 hours ago to 1 hour ago ✓`;
+        errorMessage += `\n• start="1h", end="2h" = 1 hour ago to 2 hours ago ✗ (backwards!)`;
+        errorMessage += `\n• For recent data: start="1h", end="now"`;
+        errorMessage += `\n• For historical data: start="24h", end="1h"`;
+      }
+      
+      return errorMessage;
     }
   }
 
@@ -83,21 +96,40 @@ Use discover_metrics to see available metrics.`;
       // Build query request
       const request = QueryBuilder.buildMetricsQuery(params);
       
-      console.error(`Querying metrics: ${JSON.stringify(request)}`);
-      
       // Execute query
       const response = await this.client.queryRange(request);
       
+      // Validate response structure
+      const { safeParseQueryRangeResponse } = await import('./schemas.js');
+      const parseResult = safeParseQueryRangeResponse(response);
+      
+      if (!parseResult.success) {
+        console.error(`Response validation error: ${parseResult.error}`);
+        return `Error: Invalid response from SigNoz API.\n\n${parseResult.error}\n\nThis might indicate an API change or configuration issue.`;
+      }
+      
       // Format response
       return ResponseFormatter.formatMetricsResponse(
-        response, 
+        parseResult.data, 
         params.metric.join(', '), 
         request.start, 
         request.end, 
         params.step || "1m"
       );
-    } catch (error: any) {
-      return `Error querying metrics: ${error.message}`;
+    } catch (error) {
+      let errorMessage = `Error querying metrics: ${error instanceof Error ? error.message : String(error)}`;
+      
+      // Provide additional context for time range errors
+      if (error instanceof Error && error.message.includes('Invalid time range')) {
+        errorMessage += `\n\nTime range help:`;
+        errorMessage += `\n• Relative times like "1h" mean "1 hour ago"`;
+        errorMessage += `\n• start="2h", end="1h" = 2 hours ago to 1 hour ago ✓`;
+        errorMessage += `\n• start="1h", end="2h" = 1 hour ago to 2 hours ago ✗ (backwards!)`;
+        errorMessage += `\n• For recent data: start="1h", end="now"`;
+        errorMessage += `\n• For historical data: start="24h", end="1h"`;
+      }
+      
+      return errorMessage;
     }
   }
 
@@ -114,8 +146,8 @@ Use discover_metrics to see available metrics.`;
       
       // Format response
       return ResponseFormatter.formatTracesResponse(params.query);
-    } catch (error: any) {
-      return `Error querying traces: ${error.message}`;
+    } catch (error) {
+      return `Error querying traces: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
 
@@ -144,15 +176,15 @@ Use discover_metrics to see available metrics.`;
       const logs = response.data?.result?.[0]?.list || [];
       
       return this.formatDiscoveryResults(logs, request.start, request.end);
-    } catch (error: any) {
-      let errorMessage = `Error discovering attributes: ${error.message}`;
+    } catch (error) {
+      let errorMessage = `Error discovering attributes: ${error instanceof Error ? error.message : String(error)}`;
       
       // Add helpful suggestions for common errors
-      if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+      if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('ETIMEDOUT'))) {
         errorMessage += `\n\nTip: Try reducing the sample size or time range:
 - sample_size: 5
 - time_range: "now-15m"`;
-      } else if (error.message.includes('400')) {
+      } else if (error instanceof Error && error.message.includes('400')) {
         errorMessage += `\n\nThis might indicate no logs are available in the specified time range.`;
       }
       
@@ -198,17 +230,17 @@ Use discover_metrics to see available metrics.`;
       const total = response.data?.total;
       
       return ResponseFormatter.formatMetricsList(metrics, limit, total, offset);
-    } catch (error: any) {
-      let errorMessage = `Error discovering metrics: ${error.message}`;
+    } catch (error) {
+      let errorMessage = `Error discovering metrics: ${error instanceof Error ? error.message : String(error)}`;
       
       // Add helpful context for common errors
-      if (error.message.includes('404') || error.message.includes('Not Found')) {
+      if (error instanceof Error && (error.message.includes('404') || error.message.includes('Not Found'))) {
         errorMessage += `\n\nThe metrics discovery endpoint may not be available in this SigNoz version.`;
       } else if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
         errorMessage += `\n\nTip: Try reducing the time range or limit:
 - time_range: "30m"
 - limit: 20`;
-      } else if (error.message.includes('403') || error.message.includes('401')) {
+      } else if (error instanceof Error && (error.message.includes('403') || error.message.includes('401'))) {
         errorMessage += `\n\nAuthentication issue. Please check your SIGNOZ_API_KEY.`;
       }
       
@@ -228,16 +260,16 @@ Use discover_metrics to see available metrics.`;
       const metadata = response.data;
       
       return ResponseFormatter.formatMetricAttributes(metadata);
-    } catch (error: any) {
-      let errorMessage = `Error discovering metric attributes: ${error.message}`;
+    } catch (error) {
+      let errorMessage = `Error discovering metric attributes: ${error instanceof Error ? error.message : String(error)}`;
       
       // Add helpful context for common errors
-      if (error.message.includes('404')) {
+      if (error instanceof Error && error.message.includes('404')) {
         errorMessage += `\n\nThe metric "${params.metric_name}" may not exist or the internal endpoint may not be available.
 Try running discover_metrics first to see available metrics.`;
-      } else if (error.message.includes('400')) {
+      } else if (error instanceof Error && error.message.includes('400')) {
         errorMessage += `\n\nInvalid metric name format. Make sure to use the exact metric name from discover_metrics.`;
-      } else if (error.message.includes('403') || error.message.includes('401')) {
+      } else if (error instanceof Error && (error.message.includes('403') || error.message.includes('401'))) {
         errorMessage += `\n\nAuthentication issue. Please check your SIGNOZ_API_KEY.`;
       }
       
@@ -263,12 +295,12 @@ Try running discover_metrics first to see available metrics.`;
   /**
    * Format discovery results (extracted from original server.ts)
    */
-  private formatDiscoveryResults(logs: any[], startTime: number, endTime: number): string {
+  private formatDiscoveryResults(logs: LogEntry[], startTime: number, endTime: number): string {
     // Collect all unique attributes
     const attributeMap = new Map<string, Set<string>>();
     const resourceMap = new Map<string, Set<string>>();
     
-    logs.forEach((entry: any) => {
+    logs.forEach((entry) => {
       // Collect attributes
       const attributes = entry.data?.attributes_string || {};
       Object.entries(attributes).forEach(([key, value]) => {
