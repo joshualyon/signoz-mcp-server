@@ -111,7 +111,7 @@ Use discover_metrics to see available metrics.`;
       // Format response
       return ResponseFormatter.formatMetricsResponse(
         parseResult.data, 
-        params.metric.join(', '), 
+        params.metric, 
         request.start, 
         request.end, 
         params.step || "1m"

@@ -96,7 +96,7 @@ describe('Timestamp Handling Tests', () => {
       
       const formatted = ResponseFormatter.formatMetricsResponse(
         response, 
-        'test_metric',
+        ['test_metric'],
         oneHourAgo,
         now,
         '1m'
@@ -135,7 +135,7 @@ describe('Timestamp Handling Tests', () => {
       
       const formatted = ResponseFormatter.formatMetricsResponse(
         response,
-        'test_metric', 
+        ['test_metric'], 
         nowNanos, // Wrong! But should handle gracefully
         nowNanos,
         '1m'
@@ -230,7 +230,7 @@ describe('Timestamp Handling Tests', () => {
       // Format response
       const formatted = ResponseFormatter.formatMetricsResponse(
         mockResponse,
-        params.metric.join(', '),
+        params.metric,
         query.start,
         query.end,
         '1m'

@@ -57,7 +57,7 @@ describe('Metrics Query Integration Tests', () => {
       console.log('Result:', result);
       console.log('=== End Test ===');
 
-      expect(result).toContain('k8s_pod_cpu_utilization, k8s_pod_memory_usage');
+      expect(result).toContain('|unix_millis|k8s_pod_cpu_utilization|k8s_pod_memory_usage|');
       expect(typeof result).toBe('string');
       
       // Should not contain the old error

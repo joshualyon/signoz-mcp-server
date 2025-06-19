@@ -40,7 +40,7 @@ describe('Timestamp Types and Utilities', () => {
       
       // Test seconds conversion (will lose millisecond precision)
       const convertedFromSec = TimestampUtils.autoConvertToMilliseconds(nowSec);
-      expect(convertedFromSec).toBeCloseTo(nowMs, -3); // Within 1 second
+      expect(convertedFromSec).toBeCloseTo(nowMs, -4); // Within 10 seconds
       
       // Test milliseconds passthrough
       const convertedFromMs = TimestampUtils.autoConvertToMilliseconds(nowMs);

@@ -138,19 +138,85 @@ describe('ResponseFormatter', () => {
 
       const result = ResponseFormatter.formatMetricsResponse(
         mockResponse,
-        'test_metric',
+        ['test_metric'],
         1705314000000000,
         1705315000000000,
         '1m'
       );
 
-      expect(result).toContain('Metrics query result');
-      expect(result).toContain('Query: test_metric');
-      expect(result).toContain('Step: 1m');
-      expect(result).toContain('Result type: matrix');
-      expect(result).toContain('--- Series 1 ---');
-      expect(result).toContain('job');
-      expect(result).toContain('42.5');
+      // Check for new CSV format headers
+      expect(result).toContain('# Metrics Query Result');
+      expect(result).toContain('# Step: 1m');
+      expect(result).toContain('# Data Points: 2');
+      
+      // Check for CSV table format with actual metric name
+      expect(result).toContain('|unix_millis|test_metric|');
+      expect(result).toContain('|1705314600000|42.5|');
+      expect(result).toContain('|1705314660000|43|');
+    });
+
+    it('should format multiple series with labels', () => {
+      const mockResponse = {
+        status: 'success',
+        data: {
+          resultType: 'matrix',
+          result: [{
+            queryName: 'A',
+            series: [
+              {
+                labels: { job: 'test-job', instance: 'host1' },
+                values: [
+                  { timestamp: 1705314600000, value: '42.5' },
+                  { timestamp: 1705314660000, value: '43.0' }
+                ]
+              },
+              {
+                labels: { job: 'test-job', instance: 'host2' },
+                values: [
+                  { timestamp: 1705314600000, value: '38.2' },
+                  { timestamp: 1705314660000, value: '39.1' }
+                ]
+              }
+            ]
+          }]
+        }
+      };
+
+      const result = ResponseFormatter.formatMetricsResponse(
+        mockResponse,
+        ['test_metric'],
+        1705314000000000,
+        1705315000000000,
+        '1m'
+      );
+
+      // Should show multiple series
+      expect(result).toContain('Found 2 series across 1 metric(s)');
+      expect(result).toContain('## Series 1');
+      expect(result).toContain('## Series 2');
+      expect(result).toContain('{"job":"test-job","instance":"host1"}');
+      expect(result).toContain('{"job":"test-job","instance":"host2"}');
+    });
+
+    it('should handle empty data gracefully', () => {
+      const mockResponse = {
+        status: 'success',
+        data: {
+          resultType: 'matrix',
+          result: []
+        }
+      };
+
+      const result = ResponseFormatter.formatMetricsResponse(
+        mockResponse,
+        ['test_metric'],
+        1705314000000000,
+        1705315000000000,
+        '1m'
+      );
+
+      expect(result).toContain('❌ Query executed successfully but returned no results');
+      expect(result).toContain('Expanding the time range');
     });
   });
 

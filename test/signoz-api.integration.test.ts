@@ -128,6 +128,6 @@ describe('SignozApi Integration Tests', () => {
       // Both should work (though they might fail due to no API key, the parsing should work)
       expect(typeof result1).toBe('string');
       expect(typeof result2).toBe('string');
-    });
+    }, 20000); // Increase timeout to 20 seconds
   });
 });

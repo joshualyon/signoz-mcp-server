@@ -16,7 +16,7 @@ describe('Empty Series Test', () => {
 
     const result = ResponseFormatter.formatMetricsResponse(
       mockResponseWithEmptySeries,
-      'http_requests_total',
+      ['http_requests_total'],
       1705314000000,
       1705315000000,
       '1m'
@@ -26,15 +26,9 @@ describe('Empty Series Test', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
 
-    // Should still show series header
-    expect(result).toContain('--- Series 1 ---');
-    expect(result).toContain('Labels: {"job":"test-job","instance":"localhost:8080"}');
-    
-    // Should show warning about no data points
-    expect(result).toContain('⚠️  No data points in this series');
-    
-    // Should not have any data point timestamps (time range header is okay)
-    expect(result).not.toMatch(/  \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/); // No indented timestamps
+    // Should show no data points message for empty series
+    expect(result).toContain('⚠️ No data points found in any series');
+    expect(result).toContain('The metrics exist but contain no data in the specified time range');
   });
 
   it('should handle response with no result series', () => {
@@ -47,7 +41,7 @@ describe('Empty Series Test', () => {
 
     const result = ResponseFormatter.formatMetricsResponse(
       mockResponseNoSeries,
-      'nonexistent_metric',
+      ['nonexistent_metric'],
       1705314000000,
       1705315000000,
       '1m'
@@ -58,13 +52,9 @@ describe('Empty Series Test', () => {
     console.log('=== END OUTPUT ===');
 
     // Should still show basic query info
-    expect(result).toContain('Metrics query result');
-    expect(result).toContain('Query: nonexistent_metric');
-    expect(result).toContain('Result type: matrix');
-    
-    // Should NOT show any series headers
-    expect(result).not.toContain('Series 1');
-    expect(result).not.toContain('Data points:');
+    // Should show error message for no results
+    expect(result).toContain('❌ Query executed successfully but returned no results');
+    expect(result).toContain('Expanding the time range');
   });
 
   it('should handle completely empty response', () => {
@@ -74,7 +64,7 @@ describe('Empty Series Test', () => {
 
     const result = ResponseFormatter.formatMetricsResponse(
       mockEmptyResponse,
-      'invalid_metric',
+      ['invalid_metric'],
       1705314000000,
       1705315000000,
       '1m'
@@ -84,13 +74,9 @@ describe('Empty Series Test', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
 
-    // Should still show basic query info
-    expect(result).toContain('Metrics query result');
-    expect(result).toContain('Query: invalid_metric');
-    
-    // Should not show result type or any series info
-    expect(result).not.toContain('Result type:');
-    expect(result).not.toContain('Series 1');
+    // Should show appropriate error for no data
+    expect(result).toContain('❌ No data returned from query');
+    expect(result).toContain('The metric doesn\'t exist');
   });
 
   it('should handle mixed series - some with data, some empty', () => {
@@ -121,7 +107,7 @@ describe('Empty Series Test', () => {
 
     const result = ResponseFormatter.formatMetricsResponse(
       mockMixedResponse,
-      'http_requests_per_second',
+      ['memory_usage', 'cpu_usage', 'http_requests_per_second'],
       1705314000000,
       1705315000000,
       '1m'
@@ -131,20 +117,15 @@ describe('Empty Series Test', () => {
     console.log(result);
     console.log('=== END OUTPUT ===');
 
-    // Should show all three queries
-    expect(result).toContain('=== Query 1 ===');
-    expect(result).toContain('=== Query 2 ===');
-    expect(result).toContain('=== Query 3 ===');
+    // The new format should show CSV table with all metrics
+    expect(result).toContain('# Metrics Query Result');
+    expect(result).toContain('|unix_millis|memory_usage|cpu_usage|http_requests_per_second|');
     
-    // Query 1 should have data
-    expect(result).toContain('Data points: 2');
+    // Should have data from the series that have values
     expect(result).toContain('42.5');
-    
-    // Query 2 should show no data points warning
-    expect(result).toContain('⚠️  No data points in this series');
-    
-    // Query 3 should have 1 data point
-    expect(result).toContain('Data points: 1');
     expect(result).toContain('15.2');
+    
+    // Should show multiple series (only those with data)
+    expect(result).toContain('Found 2 series across 3 metric(s)');
   });
 });

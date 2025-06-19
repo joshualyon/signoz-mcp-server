@@ -58,18 +58,32 @@ export class ResponseFormatter {
   }
 
   /**
+   * Format a numeric value with appropriate precision
+   */
+  private static formatMetricValue(value: string | number): string {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) {
+      return String(value); // Return as-is if not a number
+    }
+    
+    // Check if it's an integer
+    if (Number.isInteger(numValue)) {
+      return numValue.toString();
+    }
+    
+    // Format with up to 3 decimal places, removing trailing zeros
+    return numValue.toFixed(3).replace(/\.?0+$/, '');
+  }
+
+  /**
    * Format metrics response for display
    */
-  static formatMetricsResponse(response: unknown, query: string, startTime: number, endTime: number, step: string): string {
-    let formattedText = `Metrics query result\n\n`;
-    formattedText += `Query: ${query}\n`;
-    formattedText += `Time range: ${this.formatTimestamp(startTime)} to ${this.formatTimestamp(endTime)}\n`;
-    formattedText += `Step: ${step}\n\n`;
-    
+  static formatMetricsResponse(response: unknown, metricNames: string[], startTime: number, endTime: number, step: string): string {
     // Check if we have the expected response structure
     const data = (response as any)?.data;
     if (!response || !data || !data.result) {
-      formattedText += `❌ No data returned from query.\n\n`;
+      let formattedText = `❌ No data returned from query.\n\n`;
       formattedText += `This could mean:\n`;
       formattedText += `• The metric doesn't exist - try discover_metrics to see available metrics\n`;
       formattedText += `• No data exists in the specified time range\n`;
@@ -83,12 +97,10 @@ export class ResponseFormatter {
       return formattedText;
     }
 
-    // result is an array of query results (one per query like "A", "B", etc)
     const results = data.result;
-    formattedText += `Result type: ${data.resultType || 'unknown'}\n`;
     
     if (!results || results.length === 0) {
-      formattedText += `\n❌ Query executed successfully but returned no results.\n\n`;
+      let formattedText = `❌ Query executed successfully but returned no results.\n\n`;
       formattedText += `This means the metric exists but no data matches your filters.\n\n`;
       formattedText += `Try:\n`;
       formattedText += `• Expanding the time range\n`;
@@ -97,19 +109,18 @@ export class ResponseFormatter {
       return formattedText;
     }
 
+    // Collect all series data across all queries
+    const allSeriesData: Map<string, { labels: any, values: Map<number, string[]> }> = new Map();
+    const allTimestamps: Set<number> = new Set();
+
     // Process each query result
     results.forEach((result: any, index: number) => {
-      const queryName = result.queryName || `${index + 1}`;
-      formattedText += `\n=== Query ${queryName} ===\n`;
-      
       // Handle both SigNoz format (series array) and Prometheus format (single result with metric/values)
       let series: any[] = [];
       
       if (result.series) {
-        // SigNoz format: result has series array
         series = result.series;
       } else if (result.metric && result.values) {
-        // Prometheus format: convert to series format
         series = [{
           labels: result.metric,
           values: result.values.map(([timestamp, value]: [number, string]) => ({
@@ -119,68 +130,93 @@ export class ResponseFormatter {
         }];
       }
       
-      if (series.length === 0) {
-        formattedText += `❌ No series returned for query ${queryName}.\n`;
-        return;
-      }
-      
-      // Count series with actual data
-      const seriesWithData = series.filter((s: any) => s.values && s.values.length > 0);
-      const emptySeriesCount = series.length - seriesWithData.length;
-      
-      if (seriesWithData.length === 0) {
-        formattedText += `⚠️  Found ${series.length} series but all are empty (no data points).\n\n`;
-        formattedText += `This suggests:\n`;
-        formattedText += `• Data exists but not in the specified time range\n`;
-        formattedText += `• The metric has labels but they don't match your filters\n\n`;
-        formattedText += `Try:\n`;
-        formattedText += `• Use a wider time range (start="24h", end="now")\n`;
-        formattedText += `• Check discover_metric_attributes for available labels\n`;
-        formattedText += `• Remove query filters to see all data\n`;
-      } else {
-        formattedText += `Found ${seriesWithData.length} series with data`;
-        if (emptySeriesCount > 0) {
-          formattedText += ` (${emptySeriesCount} empty series not shown)`;
-        }
-        formattedText += `\n\n`;
-      }
-
-      // Display each series
-      series.forEach((s: any, index: number) => {
-        // Skip empty series unless there are no series with data
-        if (seriesWithData.length > 0 && (!s.values || s.values.length === 0)) {
-          return;
+      // Process each series
+      series.forEach((s: any, seriesIndex: number) => {
+        if (!s.values || s.values.length === 0) return;
+        
+        // Create a unique key for this series based on labels
+        const labelStr = s.labels ? JSON.stringify(s.labels) : `series_${seriesIndex}`;
+        
+        if (!allSeriesData.has(labelStr)) {
+          allSeriesData.set(labelStr, {
+            labels: s.labels || {},
+            values: new Map()
+          });
         }
         
-        formattedText += `--- Series ${index + 1} ---\n`;
-        if (s.labels) {
-          formattedText += `Labels: ${JSON.stringify(s.labels)}\n`;
-        }
+        const seriesData = allSeriesData.get(labelStr)!;
         
-        if (s.values && s.values.length > 0) {
-          formattedText += `Data points: ${s.values.length}\n`;
-          // Show first few and last few values
-          if (s.values.length > 6) {
-            formattedText += `First 3 values:\n`;
-            s.values.slice(0, 3).forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
-            });
-            formattedText += `...\n`;
-            formattedText += `Last 3 values:\n`;
-            s.values.slice(-3).forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
-            });
-          } else {
-            s.values.forEach((v: any) => {
-              formattedText += `  ${this.formatTimestamp(v.timestamp)}: ${v.value}\n`;
-            });
+        // Add values for this metric to the series
+        s.values.forEach((v: any) => {
+          allTimestamps.add(v.timestamp);
+          
+          if (!seriesData.values.has(v.timestamp)) {
+            seriesData.values.set(v.timestamp, new Array(results.length).fill(''));
           }
-        } else {
-          formattedText += `⚠️  No data points in this series\n`;
-        }
-        formattedText += '\n';
+          
+          const values = seriesData.values.get(v.timestamp)!;
+          values[index] = this.formatMetricValue(v.value);
+        });
       });
     });
+
+    // Convert to sorted array of timestamps
+    // TODO: For very large datasets (10k+ points), consider streaming approach
+    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+    
+    // If no data points found
+    if (sortedTimestamps.length === 0) {
+      return `⚠️ No data points found in any series.\n\nThe metrics exist but contain no data in the specified time range.`;
+    }
+
+    // Build CSV-style output
+    let formattedText = '';
+    
+    // Add metadata header
+    formattedText += `# Metrics Query Result\n`;
+    formattedText += `# Time Range: ${this.formatTimestamp(startTime)} to ${this.formatTimestamp(endTime)}\n`;
+    formattedText += `# Step: ${step}\n`;
+    formattedText += `# Data Points: ${sortedTimestamps.length}\n\n`;
+
+    // If multiple series, we need to handle them differently
+    if (allSeriesData.size > 1) {
+      // Multiple series - show each series separately with its labels
+      formattedText += `Found ${allSeriesData.size} series across ${metricNames.length} metric(s)\n\n`;
+      
+      let seriesNum = 1;
+      allSeriesData.forEach((seriesData, labelStr) => {
+        formattedText += `## Series ${seriesNum}\n`;
+        formattedText += `Labels: ${labelStr}\n\n`;
+        
+        // Create table header
+        formattedText += `|unix_millis|${metricNames.join('|')}|\n`;
+        formattedText += `|${'-'.repeat(11)}|${metricNames.map(() => '-'.repeat(10)).join('|')}|\n`;
+        
+        // Add data rows
+        sortedTimestamps.forEach(timestamp => {
+          const values = seriesData.values.get(timestamp);
+          if (values) {
+            formattedText += `|${timestamp}|${values.join('|')}|\n`;
+          }
+        });
+        
+        formattedText += '\n';
+        seriesNum++;
+      });
+    } else {
+      // Single series (or aggregated) - simpler format
+      const seriesData = allSeriesData.values().next().value;
+      
+      // Create table header
+      formattedText += `|unix_millis|${metricNames.join('|')}|\n`;
+      formattedText += `|${'-'.repeat(11)}|${metricNames.map(() => '-'.repeat(10)).join('|')}|\n`;
+      
+      // Add data rows
+      sortedTimestamps.forEach(timestamp => {
+        const values = seriesData.values.get(timestamp) || new Array(metricNames.length).fill('');
+        formattedText += `|${timestamp}|${values.join('|')}|\n`;
+      });
+    }
 
     return formattedText;
   }
