@@ -10,7 +10,7 @@ const server = spawn('bun', ['run', 'src/server.ts'], {
   env: {
     ...process.env,
     SIGNOZ_API_KEY: process.env.SIGNOZ_API_KEY,
-    SIGNOZ_BASE_URL: process.env.SIGNOZ_BASE_URL || 'http://localhost:8081',
+    SIGNOZ_API_URL: process.env.SIGNOZ_API_URL || 'http://localhost:8081',
   },
 });
 

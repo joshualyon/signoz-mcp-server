@@ -11,7 +11,7 @@ describe('SignozApi Integration Tests', () => {
   beforeAll(() => {
     config = {
       apiKey: process.env.SIGNOZ_API_KEY || 'test-key',
-      baseUrl: process.env.SIGNOZ_BASE_URL || 'http://localhost:8081'
+      baseUrl: process.env.SIGNOZ_API_URL || 'http://localhost:8081'
     };
     signozApi = new SignozApi(config);
   });

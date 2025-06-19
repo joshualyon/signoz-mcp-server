@@ -4,7 +4,7 @@
 
 ### Required
 - `SIGNOZ_API_KEY`: Your Signoz API key
-- `SIGNOZ_BASE_URL`: Base URL of your Signoz instance (default: `http://localhost:8080`)
+- `SIGNOZ_API_URL`: Base URL of your Signoz instance (default: `http://localhost:8080`)
 
 ### Optional
 - `SIGNOZ_TIMEOUT`: API request timeout in milliseconds (default: 30000)
@@ -30,7 +30,7 @@ Location: `%APPDATA%\Claude\claude_desktop_config.json`
       "args": ["run", "/path/to/signoz-mcp-server/src/server.ts"],
       "env": {
         "SIGNOZ_API_KEY": "your-api-key-here",
-        "SIGNOZ_BASE_URL": "https://your-signoz-instance.com"
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
       }
     }
   }
@@ -50,7 +50,7 @@ bun install
 Create a `.env` file in the project root:
 ```env
 SIGNOZ_API_KEY=your-api-key-here
-SIGNOZ_BASE_URL=https://your-signoz-instance.com
+SIGNOZ_API_URL=https://your-signoz-instance.com
 ```
 
 ### 3. Run in Development
@@ -121,7 +121,7 @@ npx @modelcontextprotocol/inspector bun run src/server.ts
    - Ensure API key is properly set in environment
 
 2. **Connection Errors**
-   - Verify SIGNOZ_BASE_URL is correct
+   - Verify SIGNOZ_API_URL is correct
    - Check network connectivity
    - Ensure Signoz instance is accessible
 

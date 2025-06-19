@@ -42,7 +42,7 @@ bun install
 1. Set up environment variables:
 ```bash
 export SIGNOZ_API_KEY="your-api-key"
-export SIGNOZ_BASE_URL="https://your-signoz-instance.com"
+export SIGNOZ_API_URL="https://your-signoz-instance.com"
 ```
 
 2. Configure Claude Desktop (see [docs/configuration.md](docs/configuration.md) for details)

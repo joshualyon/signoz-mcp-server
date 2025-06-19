@@ -83,12 +83,12 @@ Bun automatically loads `.env` files for both the main application and tests. Si
 ```bash
 # .env
 SIGNOZ_API_KEY=your-actual-api-key
-SIGNOZ_BASE_URL=http://localhost:8081
+SIGNOZ_API_URL=http://localhost:8081
 ```
 
 ### Available Variables
 - `SIGNOZ_API_KEY`: Required for integration tests to run
-- `SIGNOZ_BASE_URL`: Optional, defaults to `http://localhost:8081`  
+- `SIGNOZ_API_URL`: Optional, defaults to `http://localhost:8081`  
 - `SKIP_INTEGRATION_TESTS=1`: Explicitly skip all integration tests
 
 This ensures integration tests either run properly with real API credentials or fail/skip clearly, eliminating the false positive problem.

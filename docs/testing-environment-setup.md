@@ -163,7 +163,7 @@ describe('My Integration Tests', () => {
 ```bash
 # .env (automatically loaded by bun, needs config for vitest)
 SIGNOZ_API_KEY=your-actual-api-key
-SIGNOZ_BASE_URL=http://localhost:8081
+SIGNOZ_API_URL=http://localhost:8081
 
 # Optional: Skip integration tests entirely
 SKIP_INTEGRATION_TESTS=1

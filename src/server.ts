@@ -39,7 +39,7 @@ class SignozMCPServer {
     // Initialize SignozApi with configuration
     const config: SignozConfig = {
       apiKey: process.env.SIGNOZ_API_KEY || "",
-      baseUrl: process.env.SIGNOZ_BASE_URL || "http://localhost:8080",
+      baseUrl: process.env.SIGNOZ_API_URL || "http://localhost:8080",
     };
     this.signozApi = new SignozApi(config);
 
@@ -576,7 +576,7 @@ end: "2024-01-20T11:00:00Z"
       console.error("✅ Successfully connected to Signoz server");
     } else {
       console.error("❌ Failed to connect to Signoz server");
-      console.error("Please check your SIGNOZ_BASE_URL and SIGNOZ_API_KEY environment variables");
+      console.error("Please check your SIGNOZ_API_URL and SIGNOZ_API_KEY environment variables");
     }
     console.error("");
     console.error("=== Server Ready ===");

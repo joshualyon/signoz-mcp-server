@@ -20,6 +20,7 @@ export class QueryBuilder {
    * Build logs query for SigNoz API
    */
   static buildLogsQuery(params: LogQueryParams): QueryRangeRequest {
+    console.error("Building logs query with params:", JSON.stringify(params));
     const startTime = TimeUtils.parseTimeParam(params.start || "now-1h");
     const endTime = TimeUtils.parseTimeParam(params.end || "now");
     

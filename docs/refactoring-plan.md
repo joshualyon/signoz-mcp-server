@@ -200,7 +200,7 @@ class SignozMCPServer {
   constructor() {
     const config: SignozConfig = {
       apiKey: process.env.SIGNOZ_API_KEY || "",
-      baseUrl: process.env.SIGNOZ_BASE_URL || "http://localhost:8080",
+      baseUrl: process.env.SIGNOZ_API_URL || "http://localhost:8080",
     };
     this.signozApi = new SignozApi(config);
   }

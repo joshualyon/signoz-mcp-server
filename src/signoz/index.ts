@@ -211,7 +211,7 @@ Use discover_metrics to see available metrics.`;
       return `❌ Connection failed!\n\n` +
              `Server: ${this.client.getConfig().baseUrl}\n` +
              `Error: ${result.error}\n\n` +
-             `Please check your SIGNOZ_BASE_URL and SIGNOZ_API_KEY environment variables.`;
+             `Please check your SIGNOZ_API_URL and SIGNOZ_API_KEY environment variables.`;
     }
   }
 

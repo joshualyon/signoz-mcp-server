@@ -3,7 +3,7 @@ import { setupIntegrationTests } from './test-utils.js';
 
 describe('Metrics Endpoint Discovery Tests', () => {
   const { shouldSkipIntegrationTests } = setupIntegrationTests();
-  const baseUrl = process.env.SIGNOZ_BASE_URL || 'http://localhost:8081';
+  const baseUrl = process.env.SIGNOZ_API_URL || 'http://localhost:8081';
   const apiKey = process.env.SIGNOZ_API_KEY || 'test-key';
 
   describe('Direct /metrics endpoint', () => {
