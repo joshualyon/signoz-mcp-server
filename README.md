@@ -11,22 +11,40 @@ An MCP (Model Context Protocol) server that exposes Signoz observability data to
 - **Type Safety**: Robust timestamp handling and parameter validation
 - **Production Ready**: Comprehensive test coverage and error handling
 
-### ✅ **Fully Implemented**
-- ✅ **Logs**: Complete querying with pagination and attribute filtering
+### ✅ **Implemented**
+- ✅ **Logs**: Querying with pagination and attribute filtering
 - ✅ **Metrics**: Builder queries with multiple metrics, aggregation, and grouping
 - ✅ **Discovery**: Metric and log attribute discovery tools
 - ✅ **Testing**: 45+ tests covering all functionality
 
 ### 🚧 **In Development** 
-- 🚧 **Traces**: Basic implementation (placeholder)
+- 🚧 **Traces**: Placeholder - not functional
 
 ## Prerequisites
 
 - Signoz 0.85 or later (for API v4 support)
 - Signoz API key
-- Bun runtime
+- One of:
+  - Bun runtime (for development)
+  - Pre-built binary from [Releases](https://github.com/joshualyon/signoz-mcp-server/releases)
 
 ## Installation
+
+### Option 1: Using Pre-built Binaries (Recommended)
+
+Download the appropriate binary for your platform from the [Releases](https://github.com/joshualyon/signoz-mcp-server/releases) page:
+- `signoz-mcp-darwin-arm64` - macOS Apple Silicon
+- `signoz-mcp-darwin-x64` - macOS Intel
+- `signoz-mcp-linux-x64` - Linux x64
+- `signoz-mcp-linux-arm64` - Linux arm64
+- `signoz-mcp-windows-x64.exe` - Windows x64
+
+Make it executable (macOS/Linux):
+```bash
+chmod +x signoz-mcp-*
+```
+
+### Option 2: Build from Source
 
 ```bash
 # Clone the repository
@@ -39,13 +57,95 @@ bun install
 
 ## Configuration
 
-1. Set up environment variables:
-```bash
-export SIGNOZ_API_KEY="your-api-key"
-export SIGNOZ_API_URL="https://your-signoz-instance.com"
+### Claude Code Integration
+
+There are multiple ways to configure the Signoz MCP server with Claude Code:
+
+#### Method 1: Project Configuration File (Recommended)
+
+Create a `.mcp.json` file in your project root:
+
+```json
+{
+  "mcpServers": {
+    "signoz": {
+      "type": "stdio",
+      "command": "/path/to/signoz-mcp-server-binary",
+      "env": {
+        "SIGNOZ_API_KEY": "your-api-key-here",
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
+      }
+    }
+  }
+}
 ```
 
-2. Configure Claude Desktop (see [docs/configuration.md](docs/configuration.md) for details)
+Or if running from source:
+```json
+{
+  "mcpServers": {
+    "signoz": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "/path/to/signoz-mcp-server/src/server.ts"],
+      "env": {
+        "SIGNOZ_API_KEY": "your-api-key-here",
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
+      }
+    }
+  }
+}
+```
+
+After creating the file:
+1. Exit Claude Code: `/exit`
+2. Restart in the same directory: `claude -c` 
+3. Verify the server is loaded: `/mcp`
+
+> [!TIP]
+> Using `claude -c` will continue your previous Claude Code session, so you won't lose any progress and can continue your existing conversation where you left off.
+
+#### Method 2: Claude CLI Management
+
+```bash
+# Add server with binary (local to current project)
+claude mcp add signoz -s project -e SIGNOZ_API_KEY=your-key -e SIGNOZ_API_URL=https://your-instance.com -- /path/to/signoz-mcp-server-binary
+
+# Add server from source
+claude mcp add signoz -s project -e SIGNOZ_API_KEY=your-key -e SIGNOZ_API_URL=https://your-instance.com -- bun run /path/to/signoz-mcp-server/src/server.ts
+
+# List configured servers
+claude mcp list
+
+# View server configuration
+claude mcp get signoz
+
+# Remove server
+claude mcp remove signoz
+```
+
+**Scope Options:**
+- `--scope local` (default): Available only in current project
+- `--scope project`: Shared via `.mcp.json` file  
+- `--scope user`: Available across all projects
+
+> [!NOTE]
+> Local scope configurations are stored in `~/.claude.json` under:
+> ```json
+> {
+>   "projects": {
+>     "/path/to/project": {
+>       "mcpServers": {
+>         // your server config here
+>       }
+>     }
+>   }
+> }
+> ```
+
+#### Method 3: Claude Desktop App
+
+See [docs/configuration.md](docs/configuration.md) for Claude Desktop configuration details and refer to the example JSON snippets from Method 1 above.
 
 ## Usage
 

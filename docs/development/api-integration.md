@@ -1,8 +1,8 @@
 # Signoz API Integration Guide
 
 This guide provides a simplified overview of integrating with the Signoz API v4. For complete and authoritative API documentation, refer to:
-- **[signoz-api-v4-reference.md](./signoz-api-v4-reference.md)** - Detailed API structure extracted from OpenAPI spec
-- **[signoz_openapi.yaml](./signoz_openapi.yaml)** - Complete OpenAPI specification
+- **[signoz-api-v4-reference.md](./api/signoz-api-v4-reference.md)** - Detailed API structure extracted from OpenAPI spec
+- **[signoz_openapi.yaml](./api/signoz_openapi.yaml)** - Complete OpenAPI specification
 
 ## Key Concepts
 
@@ -47,7 +47,7 @@ Supported operators:
 
 ## Examples
 
-See [signoz-api-v4-reference.md](./signoz-api-v4-reference.md) for complete examples.
+See [signoz-api-v4-reference.md](./api/signoz-api-v4-reference.md) for complete examples.
 
 ## Internal/Unofficial Endpoints
 

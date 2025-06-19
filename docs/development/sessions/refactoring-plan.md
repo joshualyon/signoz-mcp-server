@@ -317,10 +317,10 @@ class SignozMCPServer {
 
 ## Success Criteria
 
-✅ **All existing functionality works unchanged**
-✅ **Tests pass for current MCP integration** 
-✅ **New SignozApi module is independently testable**
-✅ **Code is more maintainable and readable**
-✅ **Future enhancements are easier to implement**
+- ✅ **All existing functionality works unchanged**
+- ✅ **Tests pass for current MCP integration** 
+- ✅ **New SignozApi module is independently testable**
+- ✅ **Code is more maintainable and readable**
+- ✅ **Future enhancements are easier to implement**
 
 This refactoring sets up the foundation for implementing all the planned enhancements (verbose mode, level filtering, improved time syntax, pagination) in a clean, modular way.
