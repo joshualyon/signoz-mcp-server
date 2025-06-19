@@ -11,21 +11,140 @@
 - `SIGNOZ_MAX_RETRIES`: Maximum number of retry attempts (default: 3)
 - `CACHE_TTL`: Cache time-to-live in seconds (default: 300)
 
-## Claude Desktop Configuration
+## Claude Integration
 
-Add the following to your Claude Desktop configuration file:
+### Claude Code (CLI)
 
-### macOS/Linux
-Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
+Claude Code offers flexible MCP server configuration with different scopes and methods:
 
-### Windows
-Location: `%APPDATA%\Claude\claude_desktop_config.json`
+#### Method 1: Project Configuration File (`.mcp.json`)
 
-### Configuration
+Create a `.mcp.json` file in your project root:
+
 ```json
 {
   "mcpServers": {
     "signoz": {
+      "type": "stdio",
+      "command": "/path/to/signoz-mcp-server-binary",
+      "env": {
+        "SIGNOZ_API_KEY": "your-api-key-here",
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
+      }
+    }
+  }
+}
+```
+
+Or if running from source:
+```json
+{
+  "mcpServers": {
+    "signoz": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "/path/to/signoz-mcp-server/src/server.ts"],
+      "env": {
+        "SIGNOZ_API_KEY": "your-api-key-here",
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
+      }
+    }
+  }
+}
+```
+
+**Important**: After creating/modifying `.mcp.json`:
+1. Exit Claude Code: `/exit`
+2. Restart in the same directory: `claude -c`
+3. Verify the server is loaded: `/mcp`
+
+> [!TIP]
+> Using `claude -c` will continue your previous Claude Code session, so you won't lose any progress and can continue your existing conversation where you left off.
+
+#### Method 2: Claude CLI Commands
+
+```bash
+# Add server with binary (project scope - shared via .mcp.json)
+claude mcp add signoz -s project \
+  -e SIGNOZ_API_KEY=your-key \
+  -e SIGNOZ_API_URL=https://your-instance.com \
+  -- /path/to/signoz-mcp-server-binary
+
+# Add server from source (project scope)
+claude mcp add signoz -s project \
+  -e SIGNOZ_API_KEY=your-key \
+  -e SIGNOZ_API_URL=https://your-instance.com \
+  -- bun run /path/to/signoz-mcp-server/src/server.ts
+
+# Add server with user scope (available across all projects)
+claude mcp add signoz --scope user \
+  -e SIGNOZ_API_KEY=your-key \
+  -e SIGNOZ_API_URL=https://your-instance.com \
+  -- /path/to/signoz-mcp-server-binary
+
+# List all configured servers
+claude mcp list
+
+# View specific server configuration
+claude mcp get signoz
+
+# Remove server
+claude mcp remove signoz
+```
+
+**Scope Options:**
+- `--scope local` (default): Available only in current project
+  - Stored in `~/.claude.json` under `projects["/path/to/project"]["mcpServers"]`
+- `--scope project`: Shared with team via `.mcp.json` file in project root
+- `--scope user`: Available across all your projects
+  - Stored in `~/.claude.json` under `mcpServers`
+
+> [!NOTE]
+> Local scope configurations are stored in `~/.claude.json` under:
+> ```json
+> {
+>   "projects": {
+>     "/path/to/project": {
+>       "mcpServers": {
+>         // your server config here
+>       }
+>     }
+>   }
+> }
+> ```
+
+### Claude Desktop App
+
+Add the following to your Claude Desktop configuration file:
+
+#### macOS/Linux
+Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+#### Windows
+Location: `%APPDATA%\Claude\claude_desktop_config.json`
+
+#### Configuration
+```json
+{
+  "mcpServers": {
+    "signoz": {
+      "type": "stdio",
+      "command": "/path/to/signoz-mcp-server-binary",
+      "env": {
+        "SIGNOZ_API_KEY": "your-api-key-here",
+        "SIGNOZ_API_URL": "https://your-signoz-instance.com"
+      }
+    }
+  }
+}
+```
+
+Or if running from source:
+```json
+{
+  "mcpServers": {
+    "signoz": {
+      "type": "stdio",
       "command": "bun",
       "args": ["run", "/path/to/signoz-mcp-server/src/server.ts"],
       "env": {

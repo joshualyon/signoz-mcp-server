@@ -1,6 +1,10 @@
 # Signoz API v4 Reference
 
-Source: https://signoz.io/openAPISpec/api.yaml (local copy: ./signoz_openapi.yaml)
+Source: https://signoz.io/openAPISpec/api.yaml  
+> Local snapshot: [./signoz_openapi.yaml](./signoz_openapi.yaml)
+
+A human readable, interactive version of the SigNoz API documentation is also available at:  
+> https://signoz.io/api-reference/
 
 ## POST /api/v4/query_range
 
