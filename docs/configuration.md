@@ -123,6 +123,13 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
 #### Windows
 Location: `%APPDATA%\Claude\claude_desktop_config.json`
 
+> [!IMPORTANT]
+> **macOS Users**: If using downloaded binaries, you'll need to remove the Gatekeeper quarantine flag:
+> ```bash
+> xattr -d com.apple.quarantine /path/to/signoz-mcp-darwin-*
+> ```
+> Alternatively, run from source using Bun or build the binary locally.
+
 #### Configuration
 ```json
 {

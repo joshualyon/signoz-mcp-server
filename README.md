@@ -44,6 +44,12 @@ Make it executable (macOS/Linux):
 chmod +x signoz-mcp-*
 ```
 
+> [!IMPORTANT]
+> **macOS Users**: Downloaded binaries are quarantined by Gatekeeper. You have three options:
+> 1. Remove quarantine: `xattr -d com.apple.quarantine ./signoz-mcp-darwin-*`
+> 2. Run from source using Bun (see Option 2 below)
+> 3. Build the binary locally: `bun run build`
+
 ### Option 2: Build from Source
 
 ```bash

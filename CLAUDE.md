@@ -3,13 +3,6 @@
 - Use bun (and related bunx, etc) instead of node and npm
 - This is an MCP server which is consumed by AI + LLMs to so you MUST prioritize Information density (pack more data in fewer tokens), Machine readability (structured format like markdown or CSV), Complete data (show ALL requested data, not a subset)
 
-## Changelog Management
-- Always update CHANGELOG.md [Unreleased] section when making significant changes
-- Use Keep a Changelog format with Added/Changed/Deprecated/Removed/Fixed/Security sections
-- Write user-facing descriptions that focus on impact, not technical implementation details
-- Semantic-release will automatically move [Unreleased] content to versioned sections on release
-- Example: "Add cross-platform binary builds" not "feat: implement bun build --compile targets"
-
 ## Type System and API Compatibility
 - LogEntry timestamps can be either string or number (nanoseconds) - the API returns both formats
 - Use optional chaining (?.) in tests to match OpenAPI spec where fields are genuinely optional
