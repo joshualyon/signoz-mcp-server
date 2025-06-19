@@ -225,7 +225,11 @@ export class QueryBuilder {
   /**
    * Determine attribute type based on key name
    */
-  private static determineAttributeType(key: string): 'tag' | 'resource' {
+  private static determineAttributeType(key: string): 'tag' | 'resource' | '' {
+    // Special columns like body and timestamp should have empty type
+    if (key === 'body' || key === 'timestamp') {
+      return "";
+    }
     if (key.startsWith('k8s.') || key.includes('.name') || key === 'service') {
       return "resource";
     } else {

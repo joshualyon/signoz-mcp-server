@@ -37,3 +37,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript compilation errors in production and test files - fixed type mismatches and added proper optional chaining
 - LogEntry schema to accept both string and numeric timestamps matching actual API behavior
 - Test data to include all required properties (lastReceived, proper type literals)
+- Query builder to properly handle `body~value` contains syntax - fixed incorrect attribute mapping for column fields

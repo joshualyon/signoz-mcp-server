@@ -70,9 +70,9 @@ describe('QueryBuilder', () => {
       const serviceFilter = filters?.find((f: any) => f.key.key === 'service');
       expect(serviceFilter?.key.type).toBe('resource');
       
-      // body and level should be tag type
+      // body should have empty type since it's a column
       const bodyFilter = filters?.find((f: any) => f.key.key === 'body');
-      expect(bodyFilter?.key.type).toBe('tag');
+      expect(bodyFilter?.key.type).toBe('');
       expect(bodyFilter?.key.isColumn).toBe(true);
       
       const levelFilter = filters?.find((f: any) => f.key.key === 'level');

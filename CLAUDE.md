@@ -16,6 +16,7 @@
 - Builder queries in CompositeQuery are optional - different query types use different structures
 - Always check the OpenAPI spec (/docs/signoz_openapi.yaml) when in doubt about types
 - TimeUtils.formatTimestamp handles multiple timestamp formats automatically
+- Column fields like 'body' and 'timestamp' must have empty type string ("") not "tag" or "resource" to prevent incorrect SQL generation
 
 ## Testing Best Practices
 - Use optional chaining in tests to ensure we test against API contract, not implementation
